@@ -1,0 +1,11 @@
+= PowerK8S 相关资源仓库
+:experimental:
+:icons: font
+:toc: right
+:toc-title: 目录
+:toclevels: 4
+:source-highlighter: rouge
+
+== 说明
+
+此项目使用 link:https://ninja-build.org[Ninja] 作为构建系统，在编译前，你需要安装 `rpmdevtools`

@@ -1,0 +1,7 @@
+/.idea
+/.idea/*
+*.iml
+/target
+!.gitignore
+!.gitkeep
+build.ninja
