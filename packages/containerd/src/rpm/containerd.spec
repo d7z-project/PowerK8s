@@ -11,7 +11,8 @@ Source2:        containerd.toml
 Source3:        crictl.yaml
 
 BuildRequires:  golang make libseccomp-devel btrfs-progs-devel
-Requires:       libseccomp
+Requires:       libseccomp cni-plugins runc
+Provides:       oci-runtime
 
 %description
 containerd is an industry-standard container runtime with an emphasis on simplicity,
