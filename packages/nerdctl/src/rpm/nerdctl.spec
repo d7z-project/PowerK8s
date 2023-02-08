@@ -22,15 +22,17 @@ make %{?_smp_mflags}
 
 
 %install
-%{__mkdir_p} %{buildroot}%{_defaultlicensedir}/%{name}-%{version}
+%{__mkdir_p} %{buildroot}%{_defaultlicensedir}/%{name}-%{version} %{buildroot}/usr/share/bash-completion/completions
 %make_install
 %{__install} -m0644 LICENSE %{buildroot}%{_defaultlicensedir}/%{name}-%{version}/COPYING
+%{buildroot}/usr/local/bin/nerdctl completion bash | tee %{buildroot}/usr/share/bash-completion/completions/nerdctl > /dev/null
 
 
 %files
 /usr/local/bin/nerdctl
 /usr/local/bin/containerd-rootless.sh
 /usr/local/bin/containerd-rootless-setuptool.sh
+/usr/share/bash-completion/completions/nerdctl
 %license %{_defaultlicensedir}/%{name}-%{version}/COPYING
 
 %changelog

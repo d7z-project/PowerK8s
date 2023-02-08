@@ -9,6 +9,8 @@ Source0:        https://github.com/containerd/containerd/archive/refs/tags/v%{ve
 Source1:        containerd.service
 Source2:        containerd.toml
 Source3:        crictl.yaml
+Source4:        modprobe.conf
+Source5:        sysctl.conf
 
 BuildRequires:  golang make libseccomp-devel btrfs-progs-devel
 Requires:       libseccomp cni-plugins runc
@@ -32,11 +34,14 @@ make %{?_smp_mflags}
 
 %install
 %{__mkdir_p} %{buildroot}%{_defaultlicensedir}/%{name}-%{version} %{buildroot}%{_unitdir} %{buildroot}/etc/containerd %{buildroot}/etc
+%{__mkdir_p} %{buildroot}/etc/modules-load.d %{buildroot}/etc/sysctl.d/
 %make_install
 %{__install} -m0644 LICENSE %{buildroot}%{_defaultlicensedir}/%{name}-%{version}/COPYING
 %{__install} -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}
 %{__install} -m 0644 %{SOURCE2} %{buildroot}/etc/containerd/config.toml
 %{__install} -m 0644 %{SOURCE3} %{buildroot}/etc/crictl.yaml
+%{__install} -m 0644 %{SOURCE4} %{buildroot}/etc/modules-load.d/containerd.conf
+%{__install} -m 0644 %{SOURCE5} %{buildroot}/etc/sysctl.d/zz-containerd.conf
 
 %files
 /usr/local/bin/ctr
@@ -48,10 +53,14 @@ make %{?_smp_mflags}
 %{_unitdir}/containerd.service
 /etc/containerd/config.toml
 /etc/crictl.yaml
+/etc/modules-load.d/containerd.conf
+/etc/sysctl.d/zz-containerd.conf
+
 %license %{_defaultlicensedir}/%{name}-%{version}/COPYING
 
 
 %post
+sysctl --system >/dev/null 2>&1 ||:
 systemctl daemon-reload >/dev/null 2>&1 ||:
 systemctl enable --now containerd ||:
 
