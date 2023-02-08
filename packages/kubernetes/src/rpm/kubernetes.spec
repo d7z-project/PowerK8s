@@ -10,6 +10,8 @@ Source1:        sysctl.conf
 Source2:        kubelet.service
 Source3:        10-kubeadm.conf
 Source4:        modprobe.conf
+Patch0:         kubeadm.patch
+
 BuildRequires:  golang gcc automake autoconf libtool make rsync
 
 %description
@@ -18,16 +20,14 @@ an open source system for managing containerized
  It provides basic mechanisms for deployment,
   maintenance, and scaling of applications
 
-
 %prep
 %setup -q -D
-
+patch -p1 < %{PATCH0}
 
 %build
 test -f "_output/local/go/bin/kubelet" || %{__make}  WHAT=cmd/kubelet
 test -f "_output/local/go/bin/kubeadm" || %{__make}  WHAT=cmd/kubeadm
 test -f "_output/local/go/bin/kubectl" || %{__make}  WHAT=cmd/kubectl
-
 
 %install
 %{__mkdir_p} %{buildroot}%{_defaultlicensedir}/%{name}-%{version} %{buildroot}%{_unitdir}  %{buildroot}/etc
@@ -61,6 +61,12 @@ An agent that runs on each node in a Kubernetes cluster making sure that contain
 /etc/sysctl.d/zz-kubernetes.conf
 %config(noreplace) /etc/kubernetes/manifests
 
+%post kubelet
+sysctl --system >/dev/null 2>&1 ||:
+systemctl daemon-reload >/dev/null 2>&1 ||:
+systemctl enable --now kubelet ||:
+
+
 %package kubeadm
 Requires: kubernetes-kubelet = %{version}-%{release}
 Summary:  An agent that runs on each node in a Kubernetes cluster making sure that containers are running in a Pod.
@@ -89,4 +95,4 @@ An agent that runs on each node in a Kubernetes cluster making sure that contain
 
 %changelog
 * Wed Feb 8 2023 Dragon
-- 初始化项目
+- 初始化项目 使用 1.25
