@@ -8,4 +8,4 @@
 
 == 说明
 
-此项目使用 link:https://ninja-build.org[Ninja] 作为构建系统，在编译前，你需要安装 `rpmdevtools`
+在编译前，你需要安装 `rpmdevtools`
