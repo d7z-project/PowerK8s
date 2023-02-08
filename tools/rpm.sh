@@ -12,7 +12,7 @@ RPM_BUILD_DEFAULT_PARAMS=(
   "--define"
   "%_builddir %{_topdir}/build/%{_dist_name}"
   "--define"
-  "%_rpmfilename %{ARCH}/%{_dist_name}.rpm"
+  "%_rpmfilename %{ARCH}/%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}.rpm"
   "--define"
   "%_rpmdir $PACKAGE_RPM_PACKAGE_PATH"
   "--define"
@@ -53,7 +53,7 @@ rpm_list() {
   rpm_platform_info
   find "$SRC_PATH/packages" -mtime -7 -name '*.spec' -print0 | while IFS= read -r -d '' rpm_spec_path; do
     rpm_export_info "$rpm_spec_path"
-    echo -e "$rpm_name-$rpm_version-$rpm_release""_$platform_arch:\t $(echo "$rpm_summary" | xargs echo)"
+    printf "%-40s\t %s\n" "$rpm_name-$rpm_version-$rpm_release""_$platform_arch" "$(echo "$rpm_summary" | xargs echo)"
   done
 }
 
@@ -115,7 +115,7 @@ new_project() {
     mkdir -p "$SRC_PATH"/packages/"$name"/{src,resources}
     touch "$SRC_PATH"/packages/"$name"/resources/.gitkeep
     mkdir -p "$SRC_PATH"/packages/"$name"/src/{rpm,deb}
-    touch "$SRC_PATH"/packages/"$name"/src/rpm/"$name".spec
+    rpmdev-newspec "$SRC_PATH"/packages/"$name"/src/rpm/"$name".spec
     touch "$SRC_PATH"/packages/"$name"/src/deb/.gitkeep
   fi
 }

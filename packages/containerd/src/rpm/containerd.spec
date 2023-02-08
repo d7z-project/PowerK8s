@@ -12,7 +12,8 @@ Source3:        crictl.yaml
 
 BuildRequires:  golang make libseccomp-devel btrfs-progs-devel
 Requires:       libseccomp cni-plugins runc
-Provides:       oci-runtime
+Provides:       oci-rumtime = 1.0.0
+
 
 %description
 containerd is an industry-standard container runtime with an emphasis on simplicity,
@@ -60,6 +61,7 @@ case $1 in
   systemctl disable --now containerd >/dev/null 2>&1 ||:
   ;;
 esac
+
 %changelog
 * Wed Feb 8 2023 Dragon
 - 初始化项目
