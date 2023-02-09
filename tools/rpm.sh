@@ -12,12 +12,13 @@ RPM_BUILD_DEFAULT_PARAMS=(
   "--define"
   "%_builddir %{_topdir}/build/%{_dist_name}"
   "--define"
-  "%_rpmfilename %{ARCH}/%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}.rpm"
-  "--define"
   "%_rpmdir $PACKAGE_RPM_PACKAGE_PATH"
   "--define"
   "%debug_package %{nil}"
 )
+#  "--define"
+#  "%_rpmfilename %{ARCH}/%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}.rpm"
+
 rpm_check() {
   test -f "$(command -v rpmspec)" || return 1
   test -f "$(command -v rpmbuild)" || return 1

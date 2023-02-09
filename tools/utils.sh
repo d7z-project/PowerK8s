@@ -13,7 +13,7 @@ get_relative_path() {
 
 c_download() {
   if [ ! -f "$2" ]; then
-    wget -q -c -O "$2".dl "$1"
+    wget -c -O "$2".dl "$1"
     mv "$2".dl "$2"
   fi
 }
