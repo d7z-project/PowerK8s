@@ -25,10 +25,14 @@ an open source system for managing containerized
 patch -p1 < %{PATCH0}
 
 %build
-#for file in
- %{__make}  WHAT=cmd/kubelet VERSION=%{version} KUBE_DOCKER_REGISTRY=registry.powerk8s.cn
- %{__make}  WHAT=cmd/kubeadm VERSION=%{version} KUBE_DOCKER_REGISTRY=registry.powerk8s.cn
- %{__make}  WHAT=cmd/kubectl VERSION=%{version} KUBE_DOCKER_REGISTRY=registry.powerk8s.cn
+#for file in $( find . );do
+#  if [ -f "$file" ]; then
+#   sed -i  "s/registry.k8s.io/registry.powerk8s.cn/g" "$file"
+#  fi
+#done
+ %{__make}  WHAT=cmd/kubelet VERSION=%{version}
+ %{__make}  WHAT=cmd/kubeadm VERSION=%{version}
+ %{__make}  WHAT=cmd/kubectl VERSION=%{version}
 
 %install
 %{__mkdir_p} %{buildroot}%{_defaultlicensedir}/%{name}-%{version} %{buildroot}%{_unitdir}  %{buildroot}/etc
