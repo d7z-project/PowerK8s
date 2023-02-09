@@ -68,14 +68,14 @@ case $1 in
   ;;
 esac
 
-%package -n zli
+%package  zli
 Summary:         OCI-native container image registry Zot CLI
 
-%description -n zli
+%description zli
 OCI-native container image registry Zot CLI
 
 
-%files -n zli
+%files zli
 %{_bindir}/zli
 /usr/share/bash-completion/completions/zli
 
