@@ -18,7 +18,7 @@ runc is a CLI tool for spawning and running containers on Linux according to the
 
 
 %build
-make %{?_smp_mflags}
+make %{?_smp_mflags} VERSION=%{version}
 
 
 %install

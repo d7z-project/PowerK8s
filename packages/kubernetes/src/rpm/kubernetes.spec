@@ -21,13 +21,14 @@ an open source system for managing containerized
   maintenance, and scaling of applications
 
 %prep
-%setup -q -D
+%setup -q
 patch -p1 < %{PATCH0}
 
 %build
-test -f "_output/local/go/bin/kubelet" || %{__make}  WHAT=cmd/kubelet
-test -f "_output/local/go/bin/kubeadm" || %{__make}  WHAT=cmd/kubeadm
-test -f "_output/local/go/bin/kubectl" || %{__make}  WHAT=cmd/kubectl
+#for file in
+ %{__make}  WHAT=cmd/kubelet VERSION=%{version} KUBE_DOCKER_REGISTRY=registry.powerk8s.cn
+ %{__make}  WHAT=cmd/kubeadm VERSION=%{version} KUBE_DOCKER_REGISTRY=registry.powerk8s.cn
+ %{__make}  WHAT=cmd/kubectl VERSION=%{version} KUBE_DOCKER_REGISTRY=registry.powerk8s.cn
 
 %install
 %{__mkdir_p} %{buildroot}%{_defaultlicensedir}/%{name}-%{version} %{buildroot}%{_unitdir}  %{buildroot}/etc
@@ -47,7 +48,8 @@ test -f "_output/local/go/bin/kubectl" || %{__make}  WHAT=cmd/kubectl
 
 
 %package kubelet
-Requires: socat util-linux ethtool ebtables  conntrack iptables oci-runtime crictl
+Requires: socat util-linux ethtool ebtables  conntrack iptables crictl
+Requires: oci-rumtime >= 1.0.0-1%{?dist}
 Summary:  An agent that runs on each node in a Kubernetes cluster making sure that containers are running in a Pod.
 
 %description kubelet

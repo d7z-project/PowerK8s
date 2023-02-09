@@ -12,9 +12,9 @@ Source3:        crictl.yaml
 Source4:        modprobe.conf
 Source5:        sysctl.conf
 
-BuildRequires:  golang make libseccomp-devel btrfs-progs-devel
+BuildRequires:  golang make gcc libseccomp-devel btrfs-progs-devel
 Requires:       libseccomp cni-plugins runc
-Provides:       oci-rumtime = 1.0.0
+Provides:       oci-rumtime = 1.0.0-1%{?dist}
 
 
 %description

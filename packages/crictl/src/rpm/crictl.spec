@@ -8,7 +8,8 @@ URL:            https://github.com/kubernetes-sigs/cri-tools
 Source0:        https://github.com/kubernetes-sigs/cri-tools/archive/refs/tags/v%{version}.tar.gz
 
 BuildRequires:  golang make libseccomp-devel
-Requires:       libseccomp oci-runtime
+Requires:       libseccomp
+Requires:       oci-rumtime >= 1.0.0-1%{?dist}
 
 %description
 CLI and validation tools for Kubelet Container Runtime Interface (CRI) .
@@ -18,7 +19,7 @@ CLI and validation tools for Kubelet Container Runtime Interface (CRI) .
 
 
 %build
-make %{?_smp_mflags}
+make %{?_smp_mflags} VERSION=%{version}
 
 
 %install
