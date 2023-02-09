@@ -33,7 +33,7 @@ make %{?_smp_mflags} binary cli VERSION=%{version}
 %install
 %{__mkdir_p} %{buildroot}/%{_bindir} %{buildroot}%{_defaultlicensedir}/%{name}-%{version}
 %{__mkdir_p} %{buildroot}%{_unitdir} %{buildroot}/usr/share/bash-completion/completions
-%{__mkdir_p} %{buildroot}/etc/zot/ %{buildroot}/var/lib/zot/
+%{__mkdir_p} %{buildroot}/etc/zot/ %{buildroot}/var/lib/zot/ %{buildroot}/var/log/zot
 %{__install} -m 0755 bin/zot-linux-%{_arch} %{buildroot}/%{_bindir}/zot
 %{__install} -m 0755 bin/zli-linux-%{_arch} %{buildroot}/%{_bindir}/zli
 %{__install} -m0644 LICENSE %{buildroot}%{_defaultlicensedir}/%{name}-%{version}/COPYING
@@ -53,16 +53,11 @@ make %{?_smp_mflags} binary cli VERSION=%{version}
 %config(noreplace) /etc/zot/config.json
 %config(noreplace) /etc/zot/htpasswd
 /etc/zot/config.sample.json
-/var/lib/zot/
+%dir /var/lib/zot
 /usr/share/bash-completion/completions/zot
+%dir /var/log/zot
 
 %post
-if [ ! -d "/var/log/zot" ]; then
-    mkdir -p /var/log/zot
-    chown root /var/log/zot
-    chmod 600 /var/log/zot
-fi
-sysctl --system >/dev/null 2>&1 ||:
 systemctl daemon-reload >/dev/null 2>&1 ||:
 systemctl enable --now zot ||:
 
@@ -73,14 +68,14 @@ case $1 in
   ;;
 esac
 
-%package zli
+%package -n zli
 Summary:         OCI-native container image registry Zot CLI
 
-%description zli
+%description -n zli
 OCI-native container image registry Zot CLI
 
 
-%files zli
+%files -n zli
 %{_bindir}/zli
 /usr/share/bash-completion/completions/zli
 
