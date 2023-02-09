@@ -13,6 +13,7 @@ Source4:        modprobe.conf
 Patch0:         00-replace-cert-to-100.patch
 Patch1:         01-replace-default-registry.patch
 Patch2:         02-replace-remote-update-url.patch
+Patch3:         03-add-default-config-path.patch
 
 BuildRequires:  golang gcc automake autoconf libtool make rsync
 
@@ -27,6 +28,7 @@ an open source system for managing containerized
 patch -p1 < %{PATCH0}
 patch -p1 < %{PATCH1}
 patch -p1 < %{PATCH2}
+patch -p1 < %{PATCH3}
 
 %build
  %{__make}  WHAT=cmd/kubelet VERSION=%{version}

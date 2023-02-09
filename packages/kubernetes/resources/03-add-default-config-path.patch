@@ -1,0 +1,13 @@
+diff -uprN kubernetes-1.25.6/vendor/k8s.io/client-go/tools/clientcmd/loader.go kubernetes-1.25.6-patch/vendor/k8s.io/client-go/tools/clientcmd/loader.go
+--- kubernetes-1.25.6/vendor/k8s.io/client-go/tools/clientcmd/loader.go	2023-01-19 03:13:56.000000000 +0800
++++ kubernetes-1.25.6-patch/vendor/k8s.io/client-go/tools/clientcmd/loader.go	2023-02-09 17:10:51.625693928 +0800
+@@ -141,6 +141,9 @@ func NewDefaultClientConfigLoadingRules(
+ 	warnIfAllMissing := false
+
+ 	envVarFiles := os.Getenv(RecommendedConfigPathEnvVar)
++	if len(envVarFiles) == 0 {
++		envVarFiles = "/etc/kubernetes/admin.conf"
++	}
+ 	if len(envVarFiles) != 0 {
+ 		fileList := filepath.SplitList(envVarFiles)
+ 		// prevent the same path load multiple times

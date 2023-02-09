@@ -1,6 +1,6 @@
 diff -uprN containerd-1.6.16/cmd/containerd-stress/main.go containerd-1.6.16-patch/cmd/containerd-stress/main.go
 --- containerd-1.6.16/cmd/containerd-stress/main.go	2023-01-29 02:10:17.000000000 +0800
-+++ containerd-1.6.16-patch/cmd/containerd-stress/main.go	2023-02-09 16:29:19.079482905 +0800
++++ containerd-1.6.16-patch/cmd/containerd-stress/main.go	2023-02-09 16:47:50.944887995 +0800
 @@ -136,7 +136,7 @@ func main() {
  		},
  		cli.StringFlag{
@@ -10,21 +10,42 @@ diff -uprN containerd-1.6.16/cmd/containerd-stress/main.go containerd-1.6.16-pat
  			Usage: "image to be utilized for testing",
  		},
  		cli.BoolFlag{
-diff -uprN containerd-1.6.16/images/archive/importer.go containerd-1.6.16-patch/images/archive/importer.go
---- containerd-1.6.16/images/archive/importer.go	2023-01-29 02:10:17.000000000 +0800
-+++ containerd-1.6.16-patch/images/archive/importer.go	2023-02-09 16:29:19.079482905 +0800
-@@ -59,7 +59,7 @@ func WithImportCompression() ImportOpt {
- //   - prefers OCI v1 when provided
- //   - creates OCI index for Docker formats
- //   - normalizes Docker references and adds as OCI ref name
--//     e.g. alpine:latest -> docker.io/library/alpine:latest
-+//     e.g. alpine:latest -> registry.powerk8s.cn/library/alpine:latest
- //   - existing OCI reference names are untouched
- func ImportIndex(ctx context.Context, store content.Store, reader io.Reader, opts ...ImportOpt) (ocispec.Descriptor, error) {
+diff -uprN containerd-1.6.16/integration/client/client_test.go containerd-1.6.16-patch/integration/client/client_test.go
+--- containerd-1.6.16/integration/client/client_test.go	2023-01-29 02:10:17.000000000 +0800
++++ containerd-1.6.16-patch/integration/client/client_test.go	2023-02-09 16:47:04.884217674 +0800
+@@ -383,7 +383,7 @@ func TestImagePullSomePlatforms(t *testi
+
+ 	// Note: Must be different to the image used in TestImagePullAllPlatforms
+ 	// or it will see the content pulled by that, and fail.
+-	img, err := client.Fetch(ctx, "registry.k8s.io/e2e-test-images/busybox:1.29-2", opts...)
++	img, err := client.Fetch(ctx, "registry.powerk8s.cn/e2e-test-images/busybox:1.29-2", opts...)
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+diff -uprN containerd-1.6.16/integration/client/image_test.go containerd-1.6.16-patch/integration/client/image_test.go
+--- containerd-1.6.16/integration/client/image_test.go	2023-01-29 02:10:17.000000000 +0800
++++ containerd-1.6.16-patch/integration/client/image_test.go	2023-02-09 16:47:04.884217674 +0800
+@@ -79,7 +79,7 @@ func TestImageIsUnpacked(t *testing.T) {
+
+ func TestImagePullWithDistSourceLabel(t *testing.T) {
  	var (
+-		source   = "registry.k8s.io"
++		source   = "registry.powerk8s.cn"
+ 		repoName = "pause"
+ 		tag      = "3.6"
+ 	)
+@@ -231,7 +231,7 @@ func TestImageUsage(t *testing.T) {
+ func TestImageSupportedBySnapshotter_Error(t *testing.T) {
+ 	var unsupportedImage string
+ 	if runtime.GOOS == "windows" {
+-		unsupportedImage = "registry.k8s.io/pause-amd64:3.2"
++		unsupportedImage = "registry.powerk8s.cn/pause-amd64:3.2"
+ 	} else {
+ 		unsupportedImage = "mcr.microsoft.com/windows/nanoserver:1809"
+ 	}
 diff -uprN containerd-1.6.16/integration/common.go containerd-1.6.16-patch/integration/common.go
 --- containerd-1.6.16/integration/common.go	2023-01-29 02:10:17.000000000 +0800
-+++ containerd-1.6.16-patch/integration/common.go	2023-02-09 16:28:59.829180816 +0800
++++ containerd-1.6.16-patch/integration/common.go	2023-02-09 16:47:29.534576173 +0800
 @@ -47,12 +47,12 @@ var (
 
  func initImages(imageListFile string) {
@@ -46,7 +67,7 @@ diff -uprN containerd-1.6.16/integration/common.go containerd-1.6.16-patch/integ
  	if imageListFile != "" {
 diff -uprN containerd-1.6.16/pkg/cri/config/config_unix.go containerd-1.6.16-patch/pkg/cri/config/config_unix.go
 --- containerd-1.6.16/pkg/cri/config/config_unix.go	2023-01-29 02:10:17.000000000 +0800
-+++ containerd-1.6.16-patch/pkg/cri/config/config_unix.go	2023-02-09 16:28:51.389048344 +0800
++++ containerd-1.6.16-patch/pkg/cri/config/config_unix.go	2023-02-09 16:47:04.864217385 +0800
 @@ -92,7 +92,7 @@ func DefaultConfig() PluginConfig {
  			TLSKeyFile:  "",
  			TLSCertFile: "",
@@ -58,7 +79,7 @@ diff -uprN containerd-1.6.16/pkg/cri/config/config_unix.go containerd-1.6.16-pat
  		MaxContainerLogLineSize:          16 * 1024,
 diff -uprN containerd-1.6.16/pkg/cri/config/config_windows.go containerd-1.6.16-patch/pkg/cri/config/config_windows.go
 --- containerd-1.6.16/pkg/cri/config/config_windows.go	2023-01-29 02:10:17.000000000 +0800
-+++ containerd-1.6.16-patch/pkg/cri/config/config_windows.go	2023-02-09 16:28:51.379048189 +0800
++++ containerd-1.6.16-patch/pkg/cri/config/config_windows.go	2023-02-09 16:47:04.864217385 +0800
 @@ -52,7 +52,7 @@ func DefaultConfig() PluginConfig {
  			TLSKeyFile:  "",
  			TLSCertFile: "",
@@ -68,118 +89,53 @@ diff -uprN containerd-1.6.16/pkg/cri/config/config_windows.go containerd-1.6.16-
  		StatsCollectPeriod:        10,
  		MaxContainerLogLineSize:   16 * 1024,
  		MaxConcurrentDownloads:    3,
-diff -uprN containerd-1.6.16/pkg/cri/util/image.go containerd-1.6.16-patch/pkg/cri/util/image.go
---- containerd-1.6.16/pkg/cri/util/image.go	2023-01-29 02:10:17.000000000 +0800
-+++ containerd-1.6.16-patch/pkg/cri/util/image.go	2023-02-09 16:29:18.949480866 +0800
-@@ -23,9 +23,9 @@ import (
- // NormalizeImageRef normalizes the image reference following the docker convention. This is added
- // mainly for backward compatibility.
- // The reference returned can only be either tagged or digested. For reference contains both tag
--// and digest, the function returns digested reference, e.g. docker.io/library/busybox:latest@
-+// and digest, the function returns digested reference, e.g. registry.powerk8s.cn/library/busybox:latest@
- // sha256:7cc4b5aefd1d0cadf8d97d4350462ba51c694ebca145b08d7d41b41acc8db5aa will be returned as
--// docker.io/library/busybox@sha256:7cc4b5aefd1d0cadf8d97d4350462ba51c694ebca145b08d7d41b41acc8db5aa.
-+// registry.powerk8s.cn/library/busybox@sha256:7cc4b5aefd1d0cadf8d97d4350462ba51c694ebca145b08d7d41b41acc8db5aa.
- //
- // Deprecated: use github.com/containerd/containerd/reference/docker.ParseDockerRef() instead
- func NormalizeImageRef(ref string) (docker.Named, error) {
 diff -uprN containerd-1.6.16/reference/docker/reference.go containerd-1.6.16-patch/reference/docker/reference.go
 --- containerd-1.6.16/reference/docker/reference.go	2023-01-29 02:10:17.000000000 +0800
-+++ containerd-1.6.16-patch/reference/docker/reference.go	2023-02-09 16:29:18.979481337 +0800
++++ containerd-1.6.16-patch/reference/docker/reference.go	2023-02-09 16:48:34.995530780 +0800
 @@ -588,8 +588,8 @@ func anchored(res ...*regexp.Regexp) *re
  }
 
  var (
 -	legacyDefaultDomain = "index.docker.io"
 -	defaultDomain       = "docker.io"
-+	legacyDefaultDomain = "index.registry.powerk8s.cn"
++	legacyDefaultDomain = "registry.powerk8s.cn"
 +	defaultDomain       = "registry.powerk8s.cn"
  	officialRepoName    = "library"
  	defaultTag          = "latest"
  )
-@@ -597,7 +597,7 @@ var (
- // normalizedNamed represents a name which has been
- // normalized and has a familiar form. A familiar name
- // is what is used in Docker UI. An example normalized
--// name is "docker.io/library/ubuntu" and corresponding
-+// name is "registry.powerk8s.cn/library/ubuntu" and corresponding
- // familiar name of "ubuntu".
- type normalizedNamed interface {
- 	Named
-@@ -637,9 +637,9 @@ func ParseNormalizedNamed(s string) (Nam
- // ParseDockerRef normalizes the image reference following the docker convention. This is added
- // mainly for backward compatibility.
- // The reference returned can only be either tagged or digested. For reference contains both tag
--// and digest, the function returns digested reference, e.g. docker.io/library/busybox:latest@
-+// and digest, the function returns digested reference, e.g. registry.powerk8s.cn/library/busybox:latest@
- // sha256:7cc4b5aefd1d0cadf8d97d4350462ba51c694ebca145b08d7d41b41acc8db5aa will be returned as
--// docker.io/library/busybox@sha256:7cc4b5aefd1d0cadf8d97d4350462ba51c694ebca145b08d7d41b41acc8db5aa.
-+// registry.powerk8s.cn/library/busybox@sha256:7cc4b5aefd1d0cadf8d97d4350462ba51c694ebca145b08d7d41b41acc8db5aa.
- func ParseDockerRef(ref string) (Named, error) {
- 	named, err := ParseNormalizedNamed(ref)
- 	if err != nil {
-@@ -684,9 +684,9 @@ func splitDockerDomain(name string) (dom
-
- // familiarizeName returns a shortened version of the name familiar
- // to to the Docker UI. Familiar names have the default domain
--// "docker.io" and "library/" repository prefix removed.
--// For example, "docker.io/library/redis" will have the familiar
--// name "redis" and "docker.io/dmcgowan/myapp" will be "dmcgowan/myapp".
-+// "registry.powerk8s.cn" and "library/" repository prefix removed.
-+// For example, "registry.powerk8s.cn/library/redis" will have the familiar
-+// name "redis" and "registry.powerk8s.cn/dmcgowan/myapp" will be "dmcgowan/myapp".
- // Returns a familiarized named only reference.
- func familiarizeName(named namedRepository) repository {
- 	repo := repository{
 diff -uprN containerd-1.6.16/remotes/docker/config/hosts.go containerd-1.6.16-patch/remotes/docker/config/hosts.go
 --- containerd-1.6.16/remotes/docker/config/hosts.go	2023-01-29 02:10:17.000000000 +0800
-+++ containerd-1.6.16-patch/remotes/docker/config/hosts.go	2023-02-09 16:29:18.949480866 +0800
-@@ -96,9 +96,9 @@ func ConfigureHosts(ctx context.Context,
- 			hosts = make([]hostConfig, 1)
- 		}
++++ containerd-1.6.16-patch/remotes/docker/config/hosts.go	2023-02-09 16:54:37.160863673 +0800
+@@ -98,7 +98,7 @@ func ConfigureHosts(ctx context.Context,
  		if len(hosts) > 0 && hosts[len(hosts)-1].host == "" {
--			if host == "docker.io" {
-+			if host == "registry.powerk8s.cn" {
+ 			if host == "docker.io" {
  				hosts[len(hosts)-1].scheme = "https"
 -				hosts[len(hosts)-1].host = "registry-1.docker.io"
-+				hosts[len(hosts)-1].host = "registry-1.registry.powerk8s.cn"
++				hosts[len(hosts)-1].host = "registry.powerk8s.cn"
  			} else if docker.IsLocalhost(host) {
  				hosts[len(hosts)-1].host = host
  				if options.DefaultScheme == "" || options.DefaultScheme == "http" {
 diff -uprN containerd-1.6.16/remotes/docker/registry.go containerd-1.6.16-patch/remotes/docker/registry.go
 --- containerd-1.6.16/remotes/docker/registry.go	2023-01-29 02:10:17.000000000 +0800
-+++ containerd-1.6.16-patch/remotes/docker/registry.go	2023-02-09 16:29:18.939480708 +0800
-@@ -78,7 +78,7 @@ type RegistryHost struct {
-
- func (h RegistryHost) isProxy(refhost string) bool {
- 	if refhost != h.Host {
--		if refhost != "docker.io" || h.Host != "registry-1.docker.io" {
-+		if refhost != "registry.powerk8s.cn" || h.Host != "registry-1.registry.powerk8s.cn" {
- 			return true
- 		}
- 	}
-@@ -189,8 +189,8 @@ func ConfigureDefaultRegistries(ropts ..
- 			if err != nil {
++++ containerd-1.6.16-patch/remotes/docker/registry.go	2023-02-09 16:53:25.849808175 +0800
+@@ -190,7 +190,7 @@ func ConfigureDefaultRegistries(ropts ..
  				return nil, err
  			}
--		} else if host == "docker.io" {
+ 		} else if host == "docker.io" {
 -			config.Host = "registry-1.docker.io"
-+		} else if host == "registry.powerk8s.cn" {
-+			config.Host = "registry-1.registry.powerk8s.cn"
++			config.Host = "registry.powerk8s.cn"
  		}
 
  		return []RegistryHost{config}, nil
 diff -uprN containerd-1.6.16/remotes/docker/resolver.go containerd-1.6.16-patch/remotes/docker/resolver.go
 --- containerd-1.6.16/remotes/docker/resolver.go	2023-01-29 02:10:17.000000000 +0800
-+++ containerd-1.6.16-patch/remotes/docker/resolver.go	2023-02-09 16:29:18.939480708 +0800
-@@ -119,8 +119,8 @@ type ResolverOptions struct {
-
++++ containerd-1.6.16-patch/remotes/docker/resolver.go	2023-02-09 16:54:20.710620001 +0800
+@@ -120,7 +120,7 @@ type ResolverOptions struct {
  // DefaultHost is the default host function.
  func DefaultHost(ns string) (string, error) {
--	if ns == "docker.io" {
+ 	if ns == "docker.io" {
 -		return "registry-1.docker.io", nil
-+	if ns == "registry.powerk8s.cn" {
-+		return "registry-1.registry.powerk8s.cn", nil
++		return "registry.powerk8s.cn", nil
  	}
  	return ns, nil
  }

@@ -1,6 +1,6 @@
 Name:           containerd
 Version:        1.6.16
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        An industry-standard container runtime with an emphasis on simplicity, robustness and portability
 
 License:        Apache-2.0
