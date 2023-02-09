@@ -2,7 +2,7 @@ root = "/data/containerd"
 
 [plugins."io.containerd.grpc.v1.cri"]
 systemd_cgroup = true
-sandbox_image = "k8s.gcr.io/pause:3.6"
+sandbox_image = "registry.powerk8s.cn/pause:3.8"
 
 
 [plugins."io.containerd.grpc.v1.cri".registry]

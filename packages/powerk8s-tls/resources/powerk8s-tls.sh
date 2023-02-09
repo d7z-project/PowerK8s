@@ -29,19 +29,19 @@ system)
       echo "Error: ca already not initialized."
       exit 1
     )
-    command -v update-ca-trust > /dev/null 2>&1 && update-ca-trust force-enable
-    test ! -f /etc/pki/ca-trust/source/anchors/PowerK8s.pem || rm /etc/pki/ca-trust/source/anchors/PowerK8s.pem
-    test ! -f /usr/local/share/ca-certificates/PowerK8s.pem || rm /usr/local/share/ca-certificates/PowerK8s.pem
-    test ! -f /etc/pki/ca-trust/source/anchors/PowerK8s.pem || ln -sf "$CA_PATH/ca.crt" /etc/pki/ca-trust/source/anchors/PowerK8s.pem
-    test ! -f /usr/local/share/ca-certificates/PowerK8s.pem || ln -sf "$CA_PATH/ca.crt" /usr/local/share/ca-certificates/PowerK8s.pem
-    command -v update-ca-trust > /dev/null 2>&1 && update-ca-trust
-    command -v update-ca-certificates > /dev/null 2>&1 && update-ca-certificates --fresh
+    command -v update-ca-trust >/dev/null 2>&1 && update-ca-trust force-enable
+    test -f /etc/pki/ca-trust/source/anchors/PowerK8s.pem && rm /etc/pki/ca-trust/source/anchors/PowerK8s.pem
+    test -f /usr/local/share/ca-certificates/PowerK8s.pem && rm /usr/local/share/ca-certificates/PowerK8s.pem
+    test -d /etc/pki/ca-trust/source/anchors && ln -sf "$CA_PATH/ca.crt" /etc/pki/ca-trust/source/anchors/PowerK8s.pem
+    test -d /usr/local/share/ca-certificates && ln -sf "$CA_PATH/ca.crt" /usr/local/share/ca-certificates/PowerK8s.pem
+    command -v update-ca-trust >/dev/null 2>&1 && update-ca-trust
+    command -v update-ca-certificates >/dev/null 2>&1 && update-ca-certificates --fresh
     ;;
   remove)
-    test ! -f /etc/pki/ca-trust/source/anchors/PowerK8s.pem || rm /etc/pki/ca-trust/source/anchors/PowerK8s.pem
-    test ! -f /usr/local/share/ca-certificates/PowerK8s.pem || rm /usr/local/share/ca-certificates/PowerK8s.pem
-    command -v update-ca-trust > /dev/null 2>&1 && update-ca-trust
-    command -v update-ca-certificates > /dev/null 2>&1 && update-ca-certificates --fresh
+    test -f /etc/pki/ca-trust/source/anchors/PowerK8s.pem && rm /etc/pki/ca-trust/source/anchors/PowerK8s.pem
+    test -f /usr/local/share/ca-certificates/PowerK8s.pem && rm /usr/local/share/ca-certificates/PowerK8s.pem
+    command -v update-ca-trust >/dev/null 2>&1 && update-ca-trust
+    command -v update-ca-certificates >/dev/null 2>&1 && update-ca-certificates --fresh
     ;;
   *)
     echo "$(basename "$0") system help"

@@ -11,6 +11,7 @@ Source2:        containerd.toml
 Source3:        crictl.yaml
 Source4:        modprobe.conf
 Source5:        sysctl.conf
+Patch0:         00-replace-images-registry.patch
 
 BuildRequires:  golang make gcc libseccomp-devel btrfs-progs-devel
 Requires:       libseccomp cni-plugins runc
@@ -26,16 +27,16 @@ robustness, and portability. It is available as a daemon for Linux and Windows,
 
 %prep
 %setup -q
-
+patch -p1 < %{PATCH0}
 
 %build
-make %{?_smp_mflags}
+make %{?_smp_mflags} VERSION=%{version} REVISION=%{release}
 
 
 %install
 %{__mkdir_p} %{buildroot}%{_defaultlicensedir}/%{name}-%{version} %{buildroot}%{_unitdir} %{buildroot}/etc/containerd %{buildroot}/etc
 %{__mkdir_p} %{buildroot}/etc/modules-load.d %{buildroot}/etc/sysctl.d/
-%make_install
+%make_install VERSION=%{version} REVISION=%{release}
 %{__install} -m0644 LICENSE %{buildroot}%{_defaultlicensedir}/%{name}-%{version}/COPYING
 %{__install} -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}
 %{__install} -m 0644 %{SOURCE2} %{buildroot}/etc/containerd/config.toml

@@ -10,7 +10,9 @@ Source1:        sysctl.conf
 Source2:        kubelet.service
 Source3:        10-kubeadm.conf
 Source4:        modprobe.conf
-Patch0:         kubeadm.patch
+Patch0:         00-replace-cert-to-100.patch
+Patch1:         01-replace-default-registry.patch
+Patch2:         02-replace-remote-update-url.patch
 
 BuildRequires:  golang gcc automake autoconf libtool make rsync
 
@@ -23,13 +25,10 @@ an open source system for managing containerized
 %prep
 %setup -q
 patch -p1 < %{PATCH0}
+patch -p1 < %{PATCH1}
+patch -p1 < %{PATCH2}
 
 %build
-#for file in $( find . );do
-#  if [ -f "$file" ]; then
-#   sed -i  "s/registry.k8s.io/registry.powerk8s.cn/g" "$file"
-#  fi
-#done
  %{__make}  WHAT=cmd/kubelet VERSION=%{version}
  %{__make}  WHAT=cmd/kubeadm VERSION=%{version}
  %{__make}  WHAT=cmd/kubectl VERSION=%{version}
@@ -101,4 +100,4 @@ An agent that runs on each node in a Kubernetes cluster making sure that contain
 
 %changelog
 * Wed Feb 8 2023 Dragon
-- 初始化项目 使用 1.25
+- 初始化项目 使用 1.25.6

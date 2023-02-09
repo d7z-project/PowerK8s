@@ -8,4 +8,16 @@
 
 == 说明
 
-在编译前，你需要安装 `rpmdevtools`
+此项目用于探究 kubernetes 离线化安装和使用 。
+
+TIP: 此环境仅限内部离线使用, 请勿将服务暴露到公网！
+
+此项目完成了以下内容：
+
+- [ ] 二次打包所有外部项目
+** kubernetes
+** containerd
+** runc
+** cni-plugins
+
+- [ ] 变更 kubernetes 仓库拉取地址

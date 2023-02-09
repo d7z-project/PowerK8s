@@ -19,7 +19,7 @@ Some CNI network plugins, maintained by the containernetworking team.
 
 %build
 rm -rf bin
-bash -x ./build_linux.sh
+bash -x ./build_linux.sh -ldflags '-extldflags -static -X github.com/containernetworking/plugins/pkg/utils/buildversion.BuildVersion=%{version}'
 
 %install
 %{__mkdir_p} %{buildroot}/opt/cni/bin %{buildroot}%{_defaultlicensedir}/%{name}-%{version}

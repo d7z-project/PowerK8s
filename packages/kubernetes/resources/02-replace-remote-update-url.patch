@@ -1,0 +1,12 @@
+diff -uprN kubernetes-1.25.6/cmd/kubeadm/app/util/version.go kubernetes-1.25.6-patch/cmd/kubeadm/app/util/version.go
+--- kubernetes-1.25.6/cmd/kubeadm/app/util/version.go	2023-01-19 03:13:56.000000000 +0800
++++ kubernetes-1.25.6-patch/cmd/kubeadm/app/util/version.go	2023-02-09 15:09:29.308407467 +0800
+@@ -39,7 +39,7 @@ const (
+ )
+
+ var (
+-	kubeReleaseBucketURL  = "https://dl.k8s.io"
++	kubeReleaseBucketURL  = "https://objects.powerk8s.cn"
+ 	kubeCIBucketURL       = "https://storage.googleapis.com/k8s-release-dev"
+ 	kubeReleaseRegex      = regexp.MustCompile(`^v?(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)([-0-9a-zA-Z_\.+]*)?$`)
+ 	kubeReleaseLabelRegex = regexp.MustCompile(`^((latest|stable)+(-[1-9](\.[1-9]([0-9])?)?)?)\z`)

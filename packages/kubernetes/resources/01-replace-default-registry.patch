@@ -1,0 +1,24 @@
+diff -uprN kubernetes-1.25.6/cmd/kubeadm/app/apis/kubeadm/v1beta2/defaults.go kubernetes-1.25.6-patch/cmd/kubeadm/app/apis/kubeadm/v1beta2/defaults.go
+--- kubernetes-1.25.6/cmd/kubeadm/app/apis/kubeadm/v1beta2/defaults.go	2023-01-19 03:13:56.000000000 +0800
++++ kubernetes-1.25.6-patch/cmd/kubeadm/app/apis/kubeadm/v1beta2/defaults.go	2023-02-09 14:04:20.401713319 +0800
+@@ -41,7 +41,7 @@ const (
+ 	DefaultCertificatesDir = "/etc/kubernetes/pki"
+ 	// DefaultImageRepository defines default image registry
+ 	// (previously this defaulted to k8s.gcr.io)
+-	DefaultImageRepository = "registry.k8s.io"
++	DefaultImageRepository = "registry.powerk8s.cn"
+ 	// DefaultManifestsDir defines default manifests directory
+ 	DefaultManifestsDir = "/etc/kubernetes/manifests"
+ 	// DefaultClusterName defines the default cluster name
+diff -uprN kubernetes-1.25.6/cmd/kubeadm/app/apis/kubeadm/v1beta3/defaults.go kubernetes-1.25.6-patch/cmd/kubeadm/app/apis/kubeadm/v1beta3/defaults.go
+--- kubernetes-1.25.6/cmd/kubeadm/app/apis/kubeadm/v1beta3/defaults.go	2023-01-19 03:13:56.000000000 +0800
++++ kubernetes-1.25.6-patch/cmd/kubeadm/app/apis/kubeadm/v1beta3/defaults.go	2023-02-09 14:04:38.791982967 +0800
+@@ -43,7 +43,7 @@ const (
+ 	DefaultCertificatesDir = "/etc/kubernetes/pki"
+ 	// DefaultImageRepository defines default image registry
+ 	// (previously this defaulted to k8s.gcr.io)
+-	DefaultImageRepository = "registry.k8s.io"
++	DefaultImageRepository = "registry.powerk8s.cn"
+ 	// DefaultManifestsDir defines default manifests directory
+ 	DefaultManifestsDir = "/etc/kubernetes/manifests"
+ 	// DefaultClusterName defines the default cluster name

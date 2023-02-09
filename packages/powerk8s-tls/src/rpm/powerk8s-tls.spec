@@ -1,6 +1,6 @@
 Name:           powerk8s-tls
-Version:        1.0.0
-Release:        1%{?dist}
+Version:        1.0.1
+Release:        3%{?dist}
 Summary:        PowerK8s TLS Manager
 
 License:        Apache-2.0
