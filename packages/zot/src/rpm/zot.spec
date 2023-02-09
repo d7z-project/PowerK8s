@@ -8,6 +8,8 @@ URL:            https://github.com/project-zot/zot
 Source0:        https://github.com/project-zot/zot/archive/refs/tags/v%{version}.tar.gz
 Source1:        zot.service
 Source2:        config.json
+Source3:        config.sample.json
+Source4:        htpasswd
 
 BuildRequires:  golang
 
@@ -26,28 +28,39 @@ production-ready vendor-neutral OCI image registry -
 
 
 %build
-make %{?_smp_mflags} binary VERSION=%{version}
-
+make %{?_smp_mflags} binary cli VERSION=%{version}
 
 %install
-%{__mkdir_p} %{buildroot}/%{_bindir} %{buildroot}%{_defaultlicensedir}/%{name}-%{version} %{buildroot}%{_unitdir}
+%{__mkdir_p} %{buildroot}/%{_bindir} %{buildroot}%{_defaultlicensedir}/%{name}-%{version}
+%{__mkdir_p} %{buildroot}%{_unitdir} %{buildroot}/usr/share/bash-completion/completions
 %{__mkdir_p} %{buildroot}/etc/zot/ %{buildroot}/var/lib/zot/
 %{__install} -m 0755 bin/zot-linux-%{_arch} %{buildroot}/%{_bindir}/zot
+%{__install} -m 0755 bin/zli-linux-%{_arch} %{buildroot}/%{_bindir}/zli
 %{__install} -m0644 LICENSE %{buildroot}%{_defaultlicensedir}/%{name}-%{version}/COPYING
 %{__install} -m0644 %{SOURCE1} %{buildroot}%{_unitdir}/zot.service
 %{__install} -m0644 %{SOURCE2} %{buildroot}/etc/zot/config.json
+%{__install} -m0644 %{SOURCE3} %{buildroot}/etc/zot/config.sample.json
+%{__install} -m0644 %{SOURCE4} %{buildroot}/etc/zot/htpasswd
 %{__sed} -i "s|{_path_}|%{_bindir}/zot|g" %{buildroot}%{_unitdir}/zot.service
+%{buildroot}%{_bindir}/zot completion bash | tee %{buildroot}/usr/share/bash-completion/completions/zot >/dev/null
+%{buildroot}%{_bindir}/zli completion bash | tee %{buildroot}/usr/share/bash-completion/completions/zli >/dev/null
+
 
 %files
 %{_bindir}/zot
 %license %{_defaultlicensedir}/%{name}-%{version}/COPYING
 %{_unitdir}/zot.service
-%config(noreplace) /etc/zot/
+%config(noreplace) /etc/zot/config.json
+%config(noreplace) /etc/zot/htpasswd
+/etc/zot/config.sample.json
 /var/lib/zot/
+/usr/share/bash-completion/completions/zot
 
 %post
-if [ ! -f "/etc/zot/htpasswd" ]; then
-    touch /etc/zot/htpasswd
+if [ ! -d "/var/log/zot" ]; then
+    mkdir -p /var/log/zot
+    chown root /var/log/zot
+    chmod 600 /var/log/zot
 fi
 sysctl --system >/dev/null 2>&1 ||:
 systemctl daemon-reload >/dev/null 2>&1 ||:
@@ -60,6 +73,16 @@ case $1 in
   ;;
 esac
 
+%package zli
+Summary:         OCI-native container image registry Zot CLI
+
+%description zli
+OCI-native container image registry Zot CLI
+
+
+%files zli
+%{_bindir}/zli
+/usr/share/bash-completion/completions/zli
 
 %changelog
 * Wed Feb 8 2023 Dragon

@@ -1,5 +1,4 @@
 {
-  "distSpecVersion": "1.0.1",
   "storage": {
     "dedupe": true,
     "gc": true,
@@ -30,6 +29,20 @@
     }
   },
   "log": {
-    "level": "error"
+    "level": "warn",
+    "output": "/var/log/zot/zot.log",
+    "audit": "/var/log/zot/zot-audit.log"
+  },
+  "extensions": {
+    "scrub": {
+      "enable": true,
+      "interval": "24h"
+    },
+    "metrics": {
+      "enable": true,
+      "prometheus": {
+        "path": "/metrics"
+      }
+    }
   }
 }
