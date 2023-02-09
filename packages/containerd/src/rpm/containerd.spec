@@ -13,7 +13,7 @@ Source4:        modprobe.conf
 Source5:        sysctl.conf
 Patch0:         00-replace-images-registry.patch
 
-BuildRequires:  golang make gcc libseccomp-devel btrfs-progs-devel
+BuildRequires:  golang make gcc libseccomp-devel 
 Requires:       libseccomp cni-plugins runc
 Provides:       oci-rumtime = 1.0.0-1%{?dist}
 
@@ -30,7 +30,7 @@ robustness, and portability. It is available as a daemon for Linux and Windows,
 patch -p1 < %{PATCH0}
 
 %build
-make %{?_smp_mflags} VERSION=%{version} REVISION=%{release}
+make %{?_smp_mflags} VERSION=%{version} REVISION=%{release} BUILDTAGS=no_btrfs
 
 
 %install
