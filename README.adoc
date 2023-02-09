@@ -14,10 +14,14 @@ TIP: 此环境仅限内部离线使用, 请勿将服务暴露到公网！
 
 此项目完成了以下内容：
 
-- [ ] 二次打包所有外部项目
-** kubernetes
-** containerd
-** runc
-** cni-plugins
-
-- [ ] 变更 kubernetes 仓库拉取地址
+- [x] 二次打包所有外部项目
+** `kubernetes` : 1.25.6
+** `crictl` : 1.25.0
+** `containerd` : 1.6.16
+** `runc`: 1.1.4
+** `cni-plugins`: 1.2.0
+** `zot`: 1.4.3
+- [x] 变更 kubernetes 仓库拉取地址
+* 变更 `registry.k8s.io` 到 `registry.powerk8s.cn`
+* 变更 `docker.io` 到 `registry.powerk8s.cn`
+* 变更 `kubernetes` 在线版本下载地址
