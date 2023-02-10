@@ -8,6 +8,8 @@ After=network-online.target
 ExecStartPre=/bin/sh -xc '! /usr/bin/systemctl is-enabled --quiet nm-cloud-setup.service'
 # kubernetes 需要相关内核模块
 ExecStartPre=-/sbin/modprobe br_netfilter
+ExecStartPre=-/sbin/modprobe iptable_filter
+ExecStartPre=-/sbin/modprobe ip_tables
 # kubernetes 需要相关内核模块
 ExecStartPre=-/sbin/modprobe overlay
 # kubernetes 需要相关关闭交换空间

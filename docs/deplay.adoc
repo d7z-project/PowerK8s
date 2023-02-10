@@ -1,4 +1,4 @@
-= kubernetes 部署
+= PowerK8s 部署
 :experimental:
 :icons: font
 :toc: right
@@ -6,4 +6,52 @@
 :toclevels: 4
 :source-highlighter: rouge
 
+== 说明
+
+PowerK8s 直接使用 Kubernetes (R) 源码，经部分修改后打包成 Rpm/Deb，将适配如下系统 ,其他相关的系统正在适配中：
+
+- [x] CentOS 7 x86_64
+- [ ] Rocky 10 x86_64
+- [ ] Debian bullseye x86_64
+
+本文一共有如下三个步骤，具体说明如下 ：
+
+* *环境准备*：将相关的软件安装到宿主机器上，并处理宿主机上的默认配置
+* *软件配置*：对安装的软件进行配置，为接下来的集群引导做准备
+* *引导集群*：启动 `kubernetes` 集群，并安装必要的组件
+
 == 环境准备
+
+要安装 kubernetes 你需要宿主机器上如下软件：
+
+* `keepalived`: `kubernetes` 高可用配置依赖
+* `haproxy`: `kubernetes` 高可用配置依赖
+* `zot` : 作为容器仓库
+* `Containerd`: 作为容器运行时
+** `runc` : `Containerd` 需要的组件，随 `Containerd` 一起安装
+** `cni-plugin` : `Containerd` 需要的组件，随 `Containerd` 一起安装
+* `kubernetes-kubelet`: `kubernetes` 管控端
+** `crictl`： `kubernetes` 需要的组件，随 `kubernetes-kubelet` 一起安装
+* `kubernetes-kubeadm` : kubernetes 部署工具
+* `kubernetes-kubectl`: kubernetes 管理工具
+* `helm`: kubernetes 内应用安装工具，管理工具
+* `powerk8s-tls`: 一套快速生成自定义 CA 的脚本，可选
+
+TIP: `Containerd` 、`kubernetes-kubeadm` 、`kubernetes-kubelet` 需要在每一台要部署 kubernetes 节点的机器安装，而 `kubernetes-kubectl` 和 `helm` 只需在管理端安装即可，`zot` 承载整个 `kubernetes` 镜像的分发，建议选择一台大磁盘机器；`keepalived` 和 `haproxy` 需要你安装到 ** `kubernetes` 控制节点 ** 上，如果你没有高可用需求 （单控制节点）则无需安装。
+
+将这些软件安装你的要求部署到各个机器上即可。
+
+WARNING: `kubernetes` 节点通信会使用部分系统端口，建议关闭系统防火墙或放行相关的端口，如果你的服务器位于公共网络则建议使用隧道组网（例如 `Wireguard`） ； `kubernetes` *不支持* `Swap` （参照官方文档），同时需要你关闭 `SELinux`。如果你对安全性有较高的要求可使用 `OpenShift`（本文不提供相关方案）。
+
+.以下步骤针对
+===
+
+== 软件配置
+
+当所有软件安装完成后，即可开始准备环境。
+
+=== 配置镜像仓库
+
+
+
+== 引导集群

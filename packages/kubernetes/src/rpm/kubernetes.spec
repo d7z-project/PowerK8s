@@ -1,6 +1,6 @@
 Name:           kubernetes
 Version:        1.25.6
-Release:        2%{?dist}
+Release:        1%{?dist}
 Summary:        an open source system for managing containerized applications across multiple hosts.
 
 License:        Apache-2.0

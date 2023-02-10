@@ -1,5 +1,5 @@
 Name:           crictl
-Version:        1.25.0
+Version:        1.26.0
 Release:        1%{?dist}
 Summary:        CLI and validation tools for Kubelet Container Runtime Interface (CRI) .
 
