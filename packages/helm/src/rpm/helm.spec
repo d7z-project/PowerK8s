@@ -18,7 +18,7 @@ Helm is a tool for managing Charts. Charts are packages of pre-configured Kubern
 
 
 %build
-make %{?_smp_mflags}
+make %{?_smp_mflags} VERSION=%{version}
 
 
 %install

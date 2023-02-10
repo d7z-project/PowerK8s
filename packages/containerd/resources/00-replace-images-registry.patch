@@ -6,22 +6,10 @@ diff -uprN containerd-1.6.16/cmd/containerd-stress/main.go containerd-1.6.16-pat
  		cli.StringFlag{
  			Name:  "image,i",
 -			Value: "docker.io/library/alpine:latest",
-+			Value: "registry.powerk8s.cn/library/alpine:latest",
++			Value: "boot.powerk8s.cn/library/alpine:latest",
  			Usage: "image to be utilized for testing",
  		},
  		cli.BoolFlag{
-diff -uprN containerd-1.6.16/integration/client/client_test.go containerd-1.6.16-patch/integration/client/client_test.go
---- containerd-1.6.16/integration/client/client_test.go	2023-01-29 02:10:17.000000000 +0800
-+++ containerd-1.6.16-patch/integration/client/client_test.go	2023-02-09 16:47:04.884217674 +0800
-@@ -383,7 +383,7 @@ func TestImagePullSomePlatforms(t *testi
-
- 	// Note: Must be different to the image used in TestImagePullAllPlatforms
- 	// or it will see the content pulled by that, and fail.
--	img, err := client.Fetch(ctx, "registry.k8s.io/e2e-test-images/busybox:1.29-2", opts...)
-+	img, err := client.Fetch(ctx, "registry.powerk8s.cn/e2e-test-images/busybox:1.29-2", opts...)
- 	if err != nil {
- 		t.Fatal(err)
- 	}
 diff -uprN containerd-1.6.16/integration/client/image_test.go containerd-1.6.16-patch/integration/client/image_test.go
 --- containerd-1.6.16/integration/client/image_test.go	2023-01-29 02:10:17.000000000 +0800
 +++ containerd-1.6.16-patch/integration/client/image_test.go	2023-02-09 16:47:04.884217674 +0800
@@ -30,7 +18,7 @@ diff -uprN containerd-1.6.16/integration/client/image_test.go containerd-1.6.16-
  func TestImagePullWithDistSourceLabel(t *testing.T) {
  	var (
 -		source   = "registry.k8s.io"
-+		source   = "registry.powerk8s.cn"
++		source   = "boot.powerk8s.cn"
  		repoName = "pause"
  		tag      = "3.6"
  	)
@@ -39,7 +27,7 @@ diff -uprN containerd-1.6.16/integration/client/image_test.go containerd-1.6.16-
  	var unsupportedImage string
  	if runtime.GOOS == "windows" {
 -		unsupportedImage = "registry.k8s.io/pause-amd64:3.2"
-+		unsupportedImage = "registry.powerk8s.cn/pause-amd64:3.2"
++		unsupportedImage = "boot.powerk8s.cn/pause-amd64:3.2"
  	} else {
  		unsupportedImage = "mcr.microsoft.com/windows/nanoserver:1809"
  	}
@@ -56,12 +44,12 @@ diff -uprN containerd-1.6.16/integration/common.go containerd-1.6.16-patch/integ
 -		ResourceConsumer: "registry.k8s.io/e2e-test-images/resource-consumer:1.10",
 -		VolumeCopyUp:     "ghcr.io/containerd/volume-copy-up:2.1",
 -		VolumeOwnership:  "ghcr.io/containerd/volume-ownership:2.1",
-+		Alpine:           "registry.powerk8s.cn/containerd/alpine:3.14.0",
-+		BusyBox:          "registry.powerk8s.cn/containerd/busybox:1.28",
-+		Pause:            "registry.powerk8s.cn/pause:3.6",
-+		ResourceConsumer: "registry.powerk8s.cn/e2e-test-images/resource-consumer:1.10",
-+		VolumeCopyUp:     "registry.powerk8s.cn/containerd/volume-copy-up:2.1",
-+		VolumeOwnership:  "registry.powerk8s.cn/containerd/volume-ownership:2.1",
++		Alpine:           "boot.powerk8s.cn/containerd/alpine:3.14.0",
++		BusyBox:          "boot.powerk8s.cn/containerd/busybox:1.28",
++		Pause:            "boot.powerk8s.cn/pause:3.8",
++		ResourceConsumer: "boot.powerk8s.cn/e2e-test-images/resource-consumer:1.10",
++		VolumeCopyUp:     "boot.powerk8s.cn/containerd/volume-copy-up:2.1",
++		VolumeOwnership:  "boot.powerk8s.cn/containerd/volume-ownership:2.1",
  	}
 
  	if imageListFile != "" {
@@ -73,7 +61,7 @@ diff -uprN containerd-1.6.16/pkg/cri/config/config_unix.go containerd-1.6.16-pat
  			TLSCertFile: "",
  		},
 -		SandboxImage:                     "registry.k8s.io/pause:3.6",
-+		SandboxImage:                     "registry.powerk8s.cn/pause:3.6",
++		SandboxImage:                     "boot.powerk8s.cn/pause:3.8",
  		StatsCollectPeriod:               10,
  		SystemdCgroup:                    false,
  		MaxContainerLogLineSize:          16 * 1024,
@@ -85,57 +73,7 @@ diff -uprN containerd-1.6.16/pkg/cri/config/config_windows.go containerd-1.6.16-
  			TLSCertFile: "",
  		},
 -		SandboxImage:              "registry.k8s.io/pause:3.6",
-+		SandboxImage:              "registry.powerk8s.cn/pause:3.6",
++		SandboxImage:              "boot.powerk8s.cn/pause:3.8",
  		StatsCollectPeriod:        10,
  		MaxContainerLogLineSize:   16 * 1024,
  		MaxConcurrentDownloads:    3,
-diff -uprN containerd-1.6.16/reference/docker/reference.go containerd-1.6.16-patch/reference/docker/reference.go
---- containerd-1.6.16/reference/docker/reference.go	2023-01-29 02:10:17.000000000 +0800
-+++ containerd-1.6.16-patch/reference/docker/reference.go	2023-02-09 16:48:34.995530780 +0800
-@@ -588,8 +588,8 @@ func anchored(res ...*regexp.Regexp) *re
- }
-
- var (
--	legacyDefaultDomain = "index.docker.io"
--	defaultDomain       = "docker.io"
-+	legacyDefaultDomain = "registry.powerk8s.cn"
-+	defaultDomain       = "registry.powerk8s.cn"
- 	officialRepoName    = "library"
- 	defaultTag          = "latest"
- )
-diff -uprN containerd-1.6.16/remotes/docker/config/hosts.go containerd-1.6.16-patch/remotes/docker/config/hosts.go
---- containerd-1.6.16/remotes/docker/config/hosts.go	2023-01-29 02:10:17.000000000 +0800
-+++ containerd-1.6.16-patch/remotes/docker/config/hosts.go	2023-02-09 16:54:37.160863673 +0800
-@@ -98,7 +98,7 @@ func ConfigureHosts(ctx context.Context,
- 		if len(hosts) > 0 && hosts[len(hosts)-1].host == "" {
- 			if host == "docker.io" {
- 				hosts[len(hosts)-1].scheme = "https"
--				hosts[len(hosts)-1].host = "registry-1.docker.io"
-+				hosts[len(hosts)-1].host = "registry.powerk8s.cn"
- 			} else if docker.IsLocalhost(host) {
- 				hosts[len(hosts)-1].host = host
- 				if options.DefaultScheme == "" || options.DefaultScheme == "http" {
-diff -uprN containerd-1.6.16/remotes/docker/registry.go containerd-1.6.16-patch/remotes/docker/registry.go
---- containerd-1.6.16/remotes/docker/registry.go	2023-01-29 02:10:17.000000000 +0800
-+++ containerd-1.6.16-patch/remotes/docker/registry.go	2023-02-09 16:53:25.849808175 +0800
-@@ -190,7 +190,7 @@ func ConfigureDefaultRegistries(ropts ..
- 				return nil, err
- 			}
- 		} else if host == "docker.io" {
--			config.Host = "registry-1.docker.io"
-+			config.Host = "registry.powerk8s.cn"
- 		}
-
- 		return []RegistryHost{config}, nil
-diff -uprN containerd-1.6.16/remotes/docker/resolver.go containerd-1.6.16-patch/remotes/docker/resolver.go
---- containerd-1.6.16/remotes/docker/resolver.go	2023-01-29 02:10:17.000000000 +0800
-+++ containerd-1.6.16-patch/remotes/docker/resolver.go	2023-02-09 16:54:20.710620001 +0800
-@@ -120,7 +120,7 @@ type ResolverOptions struct {
- // DefaultHost is the default host function.
- func DefaultHost(ns string) (string, error) {
- 	if ns == "docker.io" {
--		return "registry-1.docker.io", nil
-+		return "registry.powerk8s.cn", nil
- 	}
- 	return ns, nil
- }

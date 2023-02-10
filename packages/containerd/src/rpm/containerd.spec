@@ -1,6 +1,6 @@
 Name:           containerd
 Version:        1.6.16
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        An industry-standard container runtime with an emphasis on simplicity, robustness and portability
 
 License:        Apache-2.0
@@ -13,7 +13,7 @@ Source4:        modprobe.conf
 Source5:        sysctl.conf
 Patch0:         00-replace-images-registry.patch
 
-BuildRequires:  golang make gcc libseccomp-devel 
+BuildRequires:  golang make gcc libseccomp-devel
 Requires:       libseccomp cni-plugins runc
 Provides:       oci-rumtime = 1.0.0-1%{?dist}
 
@@ -73,5 +73,9 @@ case $1 in
 esac
 
 %changelog
+* Wed Feb 10 2023 Dragon
+- 替换默认 docker.io 到 boot.powerk8s.cn
+
+
 * Wed Feb 8 2023 Dragon
 - 初始化项目

@@ -11,7 +11,7 @@ Source2:        config.json
 Source3:        config.sample.json
 Source4:        htpasswd
 
-BuildRequires:  golang
+BuildRequires:  golang make
 
 %if "%{_arch}" == "x86_64"
    %global  _arch amd64

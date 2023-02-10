@@ -1,6 +1,6 @@
 Name:           kubernetes
 Version:        1.25.6
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        an open source system for managing containerized applications across multiple hosts.
 
 License:        Apache-2.0
@@ -101,5 +101,9 @@ An agent that runs on each node in a Kubernetes cluster making sure that contain
 %files
 
 %changelog
+* Wed Feb 10 2023 Dragon
+- 替换默认 registry.k8s.io 到 boot.powerk8s.cn
+
+
 * Wed Feb 8 2023 Dragon
 - 初始化项目 使用 1.25.6

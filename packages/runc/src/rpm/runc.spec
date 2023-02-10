@@ -7,7 +7,7 @@ License:        Apache-2.0
 URL:            https://github.com/opencontainers/runc
 Source0:        https://github.com/opencontainers/runc/archive/refs/tags/v%{version}.tar.gz
 
-BuildRequires:  golang make libseccomp-devel
+BuildRequires:  golang make libseccomp-devel gcc
 Requires:       libseccomp
 
 %description

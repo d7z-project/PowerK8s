@@ -1,4 +1,5 @@
 %define __os_install_post %{nil}
+%global _missing_build_ids_terminate_build 0
 
 %if "%{_arch}" == "x86_64"
    %global  _arch amd64
