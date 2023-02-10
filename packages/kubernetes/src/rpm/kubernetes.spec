@@ -53,7 +53,7 @@ patch -p1 < %{PATCH3}
 
 
 %package kubelet
-Requires: socat util-linux ethtool ebtables  conntrack iptables crictl
+Requires: conntrack conntrack ebtables ethtool iproute iptables >= 1.4.21  crictl
 Requires: oci-rumtime >= 1.0.0-1%{?dist}
 Summary:  An agent that runs on each node in a Kubernetes cluster making sure that containers are running in a Pod.
 
