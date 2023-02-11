@@ -53,7 +53,7 @@ patch -p1 < %{PATCH3}
 
 
 %package kubelet
-Requires: conntrack conntrack ebtables ethtool iproute iptables >= 1.4.21  crictl
+Requires: conntrack conntrack ebtables ethtool iproute iptables >= 1.4.21 crictl cni-plugins 
 Requires: oci-rumtime >= 1.0.0-1%{?dist}
 Summary:  An agent that runs on each node in a Kubernetes cluster making sure that containers are running in a Pod.
 
@@ -101,7 +101,7 @@ An agent that runs on each node in a Kubernetes cluster making sure that contain
 %files
 
 %changelog
-* Wed Feb 10 2023 Dragon
+* Fri Feb 10 2023 Dragon
 - 替换默认 registry.k8s.io 到 boot.powerk8s.cn
 
 

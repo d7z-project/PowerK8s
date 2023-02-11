@@ -14,7 +14,7 @@ Source5:        sysctl.conf
 Patch0:         00-replace-images-registry.patch
 
 BuildRequires:  golang make gcc libseccomp-devel
-Requires:       libseccomp cni-plugins runc
+Requires:       libseccomp runc
 Provides:       oci-rumtime = 1.0.0-1%{?dist}
 
 
@@ -73,7 +73,7 @@ case $1 in
 esac
 
 %changelog
-* Wed Feb 10 2023 Dragon
+* Fri Feb 10 2023 Dragon
 - 替换默认 docker.io 到 boot.powerk8s.cn
 
 

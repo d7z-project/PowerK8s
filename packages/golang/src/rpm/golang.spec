@@ -8,13 +8,14 @@
 %endif
 
 Name:           golang
-Version:        1.19.2
-Release:        3%{?dist}
+Version:        1.19.5
+Release:        1%{?dist}
 Summary:        Build fast, reliable, and efficient software at scale
 License:        Apache 2
 URL:            https://go.dev/
-Source0:        http://mirrors.ustc.edu.cn/golang/go%{version}.linux-%{_arch}.tar.gz
+Source0:        https://mirrors.ustc.edu.cn/golang/go%{version}.linux-%{_arch}.tar.gz
 BuildRequires:  tar gzip
+AutoReqProv:    no
 
 %description
 “At the time, no single team member knew Go, but within a month, everyone was writing in Go and we were building out the endpoints.
