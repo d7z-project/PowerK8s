@@ -1,0 +1,2 @@
+FROM boot.powerk8s.cn/base/centos:7
+RUN yum makecache && yum install -y rpmdevtools make wget curl git && yum clean all

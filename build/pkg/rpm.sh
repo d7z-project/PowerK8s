@@ -5,6 +5,7 @@ shift
 src_path=''
 res_path=()
 tmp_path='/tmp/rpm'
+project_path=''
 output_path=''
 enable_down='0'
 enable_install='0'
@@ -75,6 +76,7 @@ while [[ $# -ge 1 ]]; do
     ;;
   --project)
     shift
+    project_path="$1"
     src_path="$1/src/rpm/$(basename "$1").spec"
     test ! -d "$1/resources" || res_path+=("$1/resources")
     test ! -d "$1/patches" || res_path+=("$1/patches")
@@ -95,12 +97,12 @@ function func_build() {
   check_files "$src_path"
   check_dirs "${res_path[@]}" "$tmp_path" "$output_path"
   test_feature local_repository || check_dirs "$local_repository"
-  pkg_info=$(package_info)
-  pkg_name=$(echo "$pkg_info" | grep "Name=" | sed 's/Name=//g')
-  pkg_version=$(echo "$pkg_info" | grep "Version=" | sed 's/Version=//g')
-  pkg_release=$(echo "$pkg_info" | grep "Release=" | sed 's/Release=//g')
-  pkg_build_arch=$(echo "$pkg_info" | grep "BuildArch=" | sed 's/BuildArch=//g')
-  system_dist=$(echo "$pkg_info" | grep "PlatformDist=" | sed 's/PlatformDist=//g')
+  _pkg_info=$(package_info "$src_path")
+  pkg_name=$(echo "$_pkg_info" | grep "Name=" | sed 's/Name=//g')
+  pkg_version=$(echo "$_pkg_info" | grep "Version=" | sed 's/Version=//g')
+  pkg_release=$(echo "$_pkg_info" | grep "Release=" | sed 's/Release=//g')
+  pkg_build_arch=$(echo "$_pkg_info" | grep "BuildArch=" | sed 's/BuildArch=//g')
+  system_dist=$(echo "$_pkg_info" | grep "PlatformDist=" | sed 's/PlatformDist=//g')
   # 软件包完整名称
   pkg_print_name="$pkg_name-$pkg_version-$pkg_release.$pkg_build_arch"
   # 产物最终复制的位置
@@ -123,9 +125,9 @@ function func_build() {
   fi
   debug "开始打包 $pkg_print_name"
   # 软件包资源
-  IFS=';' read -r -a pkg_resources <<<"$(echo "$pkg_info" | grep "Resources=" | sed 's/Resources=//g')"
+  IFS=';' read -r -a pkg_resources <<<"$(echo "$_pkg_info" | grep "Resources=" | sed 's/Resources=//g')"
   # 软件包编译依赖
-  IFS=';' read -r -a pkg_build_requires <<<"$(echo "$pkg_info" | grep "BuildRequires=" | sed 's/BuildRequires=//g')"
+  IFS=';' read -r -a pkg_build_requires <<<"$(echo "$_pkg_info" | grep "BuildRequires=" | sed 's/BuildRequires=//g')"
   # 指定的预先安装的包
   IFS=';' read -r -a local_build_requires <<<"$local_packages"
   pkg_res_path="$tmp_path/resources/$pkg_name-$pkg_version"
@@ -233,12 +235,83 @@ function func_build() {
   done
   echo "打包 $pkg_print_name 完成！"
 }
+# 生成 Makefile
+function func_setup() {
+  test -d "$project_path" || panic "指定的 project 路径不存在"
+  test ! -d "$output_path" || panic "指定的配置生成路径不存在"
+  provides_group=()
+  targets=()
+  # 渲染依赖关系
+  for pkg_path in "$project_path"/*; do
+    _src_path="$pkg_path/src/rpm/$(basename "$pkg_path").spec"
+    if [ -d "$pkg_path" ] && [ -f "$_src_path" ]; then
+      _pkg_info=$(package_info "$_src_path")
+      _pkg_name=$(echo "$_pkg_info" | grep "Name=" | sed "s/Name=//g")
+      IFS=';' read -r -a _pkg_provides <<<"$(echo "$_pkg_info" | grep "Provides=" | sed 's/Provides=//g')"
+      for item in "${_pkg_provides[@]}"; do
+        provides_group+=("$(echo "$item" | awk '{print $1}')=$_pkg_name")
+      done
+    fi
+  done
+  # 生成语法
+  test ! -f "$output_path" || rm "$output_path"
+  test -d "$(dirname "$output_path")" || mkdir "$(dirname "$output_path")"
+  touch "$output_path"
+  for pkg_path in "$project_path"/*; do
+    _src_path="$pkg_path/src/rpm/$(basename "$pkg_path").spec"
+    if [ -d "$pkg_path" ] && [ -f "$_src_path" ]; then
+      _pkg_info=$(package_info "$_src_path")
+      _pkg_name=$(echo "$_pkg_info" | grep "Name=" | sed "s/Name=//g")
+      targets+=("rpm_$_pkg_name")
+      IFS=';' read -r -a _pkg_build_requires <<<"$(echo "$_pkg_info" | grep "BuildRequires=" | sed 's/BuildRequires=//g')"
+      local_link=()
+      for _pkg_build_require in "${_pkg_build_requires[@]}"; do
+        _pkg_build_require_name=$(echo "$_pkg_build_require" | awk '{print $1}')
+        for provides_item in "${provides_group[@]}"; do
+          if [[ $provides_item = "$_pkg_build_require_name="* ]]; then
+            local_link+=("$(echo "$provides_item" | sed "s/=/ /g" | awk '{print $2}')")
+            break
+          fi
+        done
+      done
+      #      --project $(SRC_DIR)/kubernetes --local-package
+      rpm_targets=()
+      for item in "${local_link[@]}"; do
+        rpm_targets+=("rpm_$item")
+      done
+      {
+        echo -e "rpm_$_pkg_name : $(
+          IFS=$' '
+          echo "${rpm_targets[*]}"
+        )"
+        echo -ne "\t\$(RPM_TOOL_DEFAULT_PARAMS) --project \$(PKG_SRC_DIR)/$_pkg_name "
+        if [ ! "${#local_link[@]}" = "0" ]; then
+          echo -ne "\\"
+          echo -e "\n\t --local-package $(
+            IFS=$';'
+            echo "${local_link[*]}"
+          )"
+        fi
+        echo -e "\n"
+      } >>"$output_path"
+    fi
+  done
+  echo "rpm_all: $(
+    IFS=$' '
+    echo "${targets[*]}"
+  )" >>"$output_path"
+}
 # 查询依赖信息
 function package_info() {
-  spec_parse=$(rpmspec --parse "$src_path" | sed '/^\s*$/d')
-  echo "Name=$(echo "$spec_parse" | grep -E '^Name' | head -n 1 | awk '{print $2}')"
-  echo "Version=$(echo "$spec_parse" | grep -E '^Version' | head -n 1 | awk '{print $2}')"
-  echo "Release=$(echo "$spec_parse" | grep -E '^Release' | head -n 1 | awk '{print $2}')"
+  spec_parse=$(
+    rpmspec --define "%debug_package %{nil}" --parse "$1" | sed '/^\s*$/d'
+  )
+  name="$(echo "$spec_parse" | grep -E '^Name' | head -n 1 | awk '{print $2}')"
+  version="$(echo "$spec_parse" | grep -E '^Version' | head -n 1 | awk '{print $2}')"
+  release="$(echo "$spec_parse" | grep -E '^Release' | head -n 1 | awk '{print $2}')"
+  echo "Name=$name"
+  echo "Version=$version"
+  echo "Release=$release"
   echo "Summary=$(echo "$spec_parse" | grep -E '^Summary' | head -n 1 | awk '{for(i=2;i<=NF;++i)print $i}' | xargs echo)"
   res=()
   for file in $(echo "$spec_parse" | grep -E '^Source' | awk '{print $2}'); do
@@ -296,6 +369,39 @@ function package_info() {
     IFS=$';'
     echo "${build_requires[*]}"
   )"
+  #=================
+  tmpl_provides=()
+  for items in $(echo "$spec_parse" | grep -E '^Provides' | awk '{for(i=2;i<=NF;++i)print $i}'); do
+    tmpl_provides+=("$items")
+  done
+  provides=()
+  for ((i = 0; i < "${#tmpl_provides[@]}"; i++)); do
+    tmpl_next=${tmpl_provides[$((i + 1))]}
+    if [ "$tmpl_next" ]; then
+      if [[ $tmpl_next = \>* ]] || [[ $tmpl_next = =* ]] || [[ $tmpl_next = \<* ]] || [[ $tmpl_next = \!* ]]; then
+        provides+=("${tmpl_provides[$i]} ${tmpl_provides[$((i + 1))]} ${tmpl_provides[$((i + 2))]}")
+        i=$((i + 2))
+      else
+        provides+=("${tmpl_provides[$i]}")
+      fi
+    else
+      provides+=("${tmpl_provides[$i]}")
+    fi
+  done
+  while IFS= read -r param; do
+    _name=$(echo "$param" | awk '{print $NF}')
+    if [[ " ${param[*]} " =~ " -n " ]] && [ ! "$_name" = "$name" ]; then
+      provides+=("$_name")
+    else
+      provides+=("$name-$_name")
+    fi
+  done < <(echo "$spec_parse" | grep -E '^%package ')
+  provides+=("$name")
+  echo "Provides=$(
+    IFS=$';'
+    echo "${provides[*]}"
+  )"
+  #=================
   echo "BuildArch=$(echo "$spec_parse" | grep -E '^BuildArch' | head -n 1 | awk '{print $2}' | test || rpm --eval %_arch)"
   echo "SystemArch=$(rpm --eval %_arch)"
   platform_dist=$(rpmbuild --eval="%{dist}" | sed -e "s/\.//g")
@@ -343,5 +449,8 @@ function test_feature() {
 case $child_command in
 build)
   func_build
+  ;;
+setup)
+  func_setup
   ;;
 esac
