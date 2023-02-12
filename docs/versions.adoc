@@ -1,0 +1,41 @@
+= 软件以及版本说明
+:experimental:
+:icons: font
+:source-highlighter: rouge
+
+此仓库使用的所有软件如下所示：
+
+[cols="1,1,2a,1a,1"]
+|===
+|软件名称 |使用的版本 |修改的内容 |用途说明 | 包装形式
+
+|golang|1.15.5|原样提供|用于编译相关组件 |RPM/DEB
+
+|Containerd
+|1.6.16
+|
+* 替换 registry.k8s.io 为 boot.powerk8s.cn
+* 替换 pause 镜像的版本为 3.8 (与 k8s 保持一致)
+| Kubernetes CRI 运行时
+|RPM/DEB
+
+|runc|1.1.4|原样提供| Containerd 相关依赖|RPM/DEB
+
+|Kubernetes
+|1.25.6
+|
+* 修改默认证书过期时间为 100 年
+* 修改默认拉取域名为 `boot.powerk8s.cn`
+* 修改默认版本获取地址为 `objects.powerk8s.cn`
+| * `kubeadm` 用于引导集群
+* `kubelet` 用于调度集群
+* `kubectl` 用于管理集群
+|RPM/DEB
+
+|cni-plugins|1.2.0|原样提供|Kubernetes 所需的组件|RPM/DEB
+|crictl|1.26.0|原样提供|Kubernetes 所需的组件|RPM/DEB
+|helm|3.11.0|原样提供|用于安装 Helm Charts 包|RPM/DEB
+|zot|1.4.3|原样提供|作为 镜像仓库和 Helm Chart 仓库|RPM/DEB
+
+|===
+
