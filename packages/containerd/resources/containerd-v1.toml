@@ -1,4 +1,4 @@
-# 此配置针对 Cgrup V1
+# 此配置针对 Cgroup V1
 
 root = "/data/containerd"
 
