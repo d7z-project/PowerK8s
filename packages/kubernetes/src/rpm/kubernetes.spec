@@ -16,7 +16,7 @@ Patch2:         02-replace-remote-update-url.patch
 Patch3:         03-add-default-config-path.patch
 
 BuildRequires:  golang gcc automake autoconf libtool make rsync
-
+Requires:       kubernetes-kubeadm kubernetes-kubelet kubernetes-kubectl
 %description
 an open source system for managing containerized
  applications across multiple hosts.

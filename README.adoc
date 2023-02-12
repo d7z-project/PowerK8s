@@ -25,3 +25,6 @@ TIP: 此环境仅限内部离线使用, 请勿将服务暴露到公网！
 * 变更 `registry.k8s.io` 到 `registry.powerk8s.cn`
 * 变更 `docker.io` 到 `registry.powerk8s.cn`
 * 变更 `kubernetes` 在线版本下载地址
+
+
+== 开发

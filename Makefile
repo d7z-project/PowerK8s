@@ -1,8 +1,10 @@
-ROOT_DIR=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-BUILD_DIR= $(ROOT_DIR)target
+.DEFAULT_GOAL := all
+SRC_DIR:=$(abspath $(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
+OUTPUT_DIR:=$(abspath target)
+BINARY_DIR:=$(abspath binary)
+TOOLS_DIR:=$(abspath build)
 
-
+include packages/Packages.mk
 
 .PHONY : all
-all:
-	echo $(BUILD_DIR)
+all: rpm
