@@ -1,9 +1,6 @@
 = PowerK8S 相关资源仓库
 :experimental:
 :icons: font
-:toc: right
-:toc-title: 目录
-:toclevels: 4
 :source-highlighter: rouge
 
 == 说明
@@ -22,8 +19,7 @@ TIP: 此环境仅限内部离线使用, 请勿将服务暴露到公网！
 ** `cni-plugins`: 1.2.0
 ** `zot`: 1.4.3
 - [x] 变更 kubernetes 仓库拉取地址
-* 变更 `registry.k8s.io` 到 `registry.powerk8s.cn`
-* 变更 `docker.io` 到 `registry.powerk8s.cn`
+* 变更 `registry.k8s.io` 到 `boot.powerk8s.cn`
 * 变更 `kubernetes` 在线版本下载地址
 
 

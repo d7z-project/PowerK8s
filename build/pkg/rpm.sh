@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-
+set -e
 child_command="$1"
 shift
 src_path=''
 res_path=()
 tmp_path='/tmp/rpm'
 output_path=''
-enable_clean='0'
 enable_down='0'
 enable_install='0'
 enable_cache='0'
@@ -24,7 +23,7 @@ while [[ $# -ge 1 ]]; do
     ;;
   --res | --resource | -r)
     shift
-    res_path+=($1)
+    res_path+=("$1")
     shift
     ;;
   --output | -o)
@@ -36,10 +35,6 @@ while [[ $# -ge 1 ]]; do
     shift
     tmp_path=$1
     shift
-    ;;
-  --enable-clean)
-    shift
-    enable_clean='1'
     ;;
   --debug)
     shift
@@ -58,7 +53,6 @@ while [[ $# -ge 1 ]]; do
     enable_down='1'
     enable_install='1'
     enable_cache='1'
-    enable_clean='1'
     ;;
   --enable-cache)
     shift
