@@ -7,10 +7,12 @@ License:        Apache-2.0
 URL:            https://github.com/containerd/containerd/
 Source0:        https://github.com/containerd/containerd/archive/refs/tags/v%{version}.tar.gz
 Source1:        containerd.service
-Source2:        containerd.toml
+%if %{?rhel} < 8
+Source2:        containerd-v1.toml
+%else
+Source2:        containerd-v2.toml
+%endif
 Source3:        crictl.yaml
-Source4:        modprobe.conf
-Source5:        sysctl.conf
 Patch0:         00-replace-images-registry.patch
 
 BuildRequires:  golang make gcc libseccomp-devel
@@ -41,8 +43,6 @@ make %{?_smp_mflags} VERSION=%{version} REVISION=%{release} BUILDTAGS=no_btrfs
 %{__install} -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}
 %{__install} -m 0644 %{SOURCE2} %{buildroot}/etc/containerd/config.toml
 %{__install} -m 0644 %{SOURCE3} %{buildroot}/etc/crictl.yaml
-%{__install} -m 0644 %{SOURCE4} %{buildroot}/etc/modules-load.d/containerd.conf
-%{__install} -m 0644 %{SOURCE5} %{buildroot}/etc/sysctl.d/zz-containerd.conf
 
 %files
 /usr/local/bin/ctr
@@ -54,16 +54,18 @@ make %{?_smp_mflags} VERSION=%{version} REVISION=%{release} BUILDTAGS=no_btrfs
 %{_unitdir}/containerd.service
 /etc/containerd/config.toml
 /etc/crictl.yaml
-/etc/modules-load.d/containerd.conf
-/etc/sysctl.d/zz-containerd.conf
 
 %license %{_defaultlicensedir}/%{name}-%{version}/COPYING
 
 
 %post
-sysctl --system >/dev/null 2>&1 ||:
 systemctl daemon-reload >/dev/null 2>&1 ||:
 systemctl enable --now containerd ||:
+case $1 in
+  1)
+  systemctl restart containerd >/dev/null 2>&1 ||:
+  ;;
+esac
 
 %preun
 case $1 in

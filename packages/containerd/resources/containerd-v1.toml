@@ -1,3 +1,5 @@
+# 此配置针对 Cgrup V1
+
 root = "/data/containerd"
 
 [plugins."io.containerd.grpc.v1.cri"]
