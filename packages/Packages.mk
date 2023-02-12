@@ -5,6 +5,11 @@ RPM_TOOL_DEFAULT_PARAMS:=bash $(TOOL_RPM) build --output $(RPM_OUTPUT)  --auto -
 --local-repository $(RPM_OUTPUT)
 
 -include $(SETUP_DIR)/rpm.mk
+-include $(SETUP_DIR)/deb.mk
 
-setup_rpm:
+pkg-setup:pkg-rpm_setup
+# 自动识别所有 RPM 内容，并添加到 Target
+pkg-rpm_setup:
 	bash $(TOOL_RPM) setup --project $(PKG_SRC_DIR) -o $(SETUP_DIR)/rpm.mk --debug
+
+pkg-all: pkg-rpm_all

@@ -14,6 +14,7 @@ include images/Images.mk
 
 .PHONY : all setup
 
-setup: setup_rpm
+setup: pkg-setup
 
-all: rpm_all
+all: pkg-all
+

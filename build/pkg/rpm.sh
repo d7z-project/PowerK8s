@@ -262,7 +262,7 @@ function func_setup() {
     if [ -d "$pkg_path" ] && [ -f "$_src_path" ]; then
       _pkg_info=$(package_info "$_src_path")
       _pkg_name=$(echo "$_pkg_info" | grep "Name=" | sed "s/Name=//g")
-      targets+=("rpm_$_pkg_name")
+      targets+=("pkg-rpm_$_pkg_name")
       IFS=';' read -r -a _pkg_build_requires <<<"$(echo "$_pkg_info" | grep "BuildRequires=" | sed 's/BuildRequires=//g')"
       local_link=()
       for _pkg_build_require in "${_pkg_build_requires[@]}"; do
@@ -277,10 +277,10 @@ function func_setup() {
       #      --project $(SRC_DIR)/kubernetes --local-package
       rpm_targets=()
       for item in "${local_link[@]}"; do
-        rpm_targets+=("rpm_$item")
+        rpm_targets+=("pkg-rpm_$item")
       done
       {
-        echo -e "rpm_$_pkg_name : $(
+        echo -e "pkg-rpm_$_pkg_name : $(
           IFS=$' '
           echo "${rpm_targets[*]}"
         )"
@@ -296,7 +296,7 @@ function func_setup() {
       } >>"$output_path"
     fi
   done
-  echo "rpm_all: $(
+  echo "pkg-rpm_all: $(
     IFS=$' '
     echo "${targets[*]}"
   )" >>"$output_path"
