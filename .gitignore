@@ -8,3 +8,5 @@
 !.gitignore
 !.gitkeep
 build.ninja
+/target
+!Cargo.lock

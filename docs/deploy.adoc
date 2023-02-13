@@ -1,0 +1,373 @@
+= PowerK8s 部署
+:experimental:
+:icons: font
+:source-highlighter: rougeinclude::./deploy.adoc[]
+
+
+== 说明
+
+*PowerK8s* 直接使用  ** Kubernetes (R) ** 源码，经部分修改后打包成 *RPM/DEB*，将适配如下系统：
+
+- [x] CentOS 7 x86_64
+- [x] Rocky 10 x86_64
+- [ ] Debian bullseye x86_64
+
+其他相关的系统正在适配中...
+
+本文一共有如下三个步骤，具体说明如下 ：
+
+* *环境准备*：将相关的软件安装到宿主机器上，并处理宿主机上的默认配置
+* *软件配置*：对安装的软件进行配置，为接下来的集群引导做准备
+* *引导集群*：启动 `kubernetes` 集群，并安装必要的组件
+
+== 环境准备
+
+要安装 *kubernetes* 你需要宿主机器上如下软件：
+
+* `keepalived`: `kubernetes` 高可用配置依赖
+* `haproxy`: `kubernetes` 高可用配置依赖
+* `zot` : 作为容器仓库
+* `Containerd`: 作为容器运行时
+** `runc` : `Containerd` 需要的组件，随 `Containerd` 一起安装
+* `kubernetes-kubelet`: `kubernetes` 管控端
+** `crictl`： `kubernetes` 需要的组件，随 `kubernetes-kubelet` 一起安装
+** `cni-plugin` : `kubernetes` 需要的组件，随 `kubernetes-kubelet` 一起安装
+* `kubernetes-kubeadm` : kubernetes 部署工具
+* `kubernetes-kubectl`: kubernetes 管理工具
+* `helm`: kubernetes 内应用安装工具，管理工具
+* `powerk8s-tls`: 一套快速生成自定义 CA 的脚本，可选
+* `skopeo`: 一套镜像处理工具
+
+说明: `Containerd` 、`kubernetes-kubeadm` 、`kubernetes-kubelet` 需要在每一台要部署 *kubernetes* 节点的机器安装，而 `kubernetes-kubectl` 和 `helm` 只需在管理端安装即可，`zot` 承载整个 `kubernetes` 镜像的分发，建议选择一台大磁盘机器；`keepalived` 和 `haproxy` 需要你安装到 ** `kubernetes` 控制节点 ** 上，如果你没有高可用需求（单控制节点）则无需安装。
+
+将这些软件安装你的要求部署到各个机器上即可。
+
+
+
+以下步骤针对 CentOS 7 系统，其他系统可以此参考
+
+=== 修改系统配置
+
+确保每个节点上 `+MAC+` 地址和 `+product_uuid+` 的唯一性
+
+* 你可以使用命令 `+ip link+` 或 `+ifconfig -a+` 来获取网络接口的 MAC 地址
+* 可以使用 `+sudo cat /sys/class/dmi/id/product_uuid+` 命令对 product_uuid 校验
+
+如果你的系统 `+hostname+` 为默认的 `+localhost+`,请为其重命名，确保每个节点的`+hostname+` 不相同。一般来讲，硬件设备会拥有唯一的地址，但是有些虚拟机的地址可能会重复。 *Kubernetes* 使用这些值来唯一确定集群中的节点。 如果这些值在每个节点上不唯一，可能会导致安装失败。
+
+=== 关闭SELinux
+
+SELinux 可能导致安装后 `Pod` 出现访问权限问题，建议关闭。
+
+TIP: 如果你对安全性有较高的要求可使用 `OpenShift`（本文不提供相关方案）。
+
+[source,bash]
+----
+setenforce 0
+sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+----
+
+=== 关闭 Swap
+
+`kubernetes` *不支持* `Swap` （参照官方文档），Swap 将在每次启动 `kubelet` 时自动关闭，无需手动干预。
+
+=== 配置防火墙
+
+`kubernetes` 节点通信会使用部分系统端口，建议关闭系统防火墙或放行相关的端口，如果你的服务器位于公共网络则建议使用隧道组网（例如 `Wireguard`）
+
+可使用以下命令快速关闭防火墙
+
+[source,bash]
+----
+systemctl disable --now firewalld
+----
+
+=== 检查 DNS 配置
+
+不正确的 dns 配置可能导致集群的 `coredns` 启动失败，请检查 `/etc/resolv.conf` 配置，确保其内容正确
+
+=== 安装软件包
+
+以上软件配置完成后即可开始安装软件
+
+各个节点需要安装的软件如下表所示：
+
+|===
+|节点分类 |需要的软件包 |其他说明
+
+| *Kubernetes节点* |
+`containerd`,`runc`,`crictl`,`cni-plugins`
+`kubeadm` ,`kubelet`
+|需确保节点上无软件占用 kubernetes 使用的端口
+
+|*Kubernetes控制节点*
+|*Kubernetes节点* 的所有软件，`kubectl`,`helm`,`haproxy`,
+`keepalived`
+|需确保节点上无软件占用 kubernetes 使用的端口
+
+| *镜像仓库节点*
+|`zot`,`powerk8s-tls`,`skopeo`
+| 需要存储所有镜像，建议分配较大的磁盘，可同时部署到 `kubernetes` 节点上
+
+|===
+
+== 软件配置
+
+当所有软件安装完成后，即可开始准备环境。
+
+=== 配置镜像仓库
+
+此处使用的是 `Zot` 作为镜像仓库 ，在部署 `Zot` 的仓库上完成以下步骤。
+
+==== 创建证书
+
+使用 `powerk8s-tls` 命令创建证书 （ *powerk8s-tls* 为使用 OpenSSL 为内核的证书操作工具）：
+
+[source,bash]
+----
+# 创建 CA 证书
+powerk8s-tls init
+# 将 CA 证书添加到证书信任链中
+powerk8s-tls system intall
+# 创建名为 `boot.powerk8s.cn` 的服务器证书
+powerk8s-tls server boot.powerk8s.cn new
+# 部署证书到 zot 目录
+powerk8s-tls server boot.powerk8s.cn install /etc/zot/
+# 导出 CA 证书
+powerk8s-tls export $HOME/ca.cert
+----
+
+拿到 CA 证书后，将其放置到所有 K8s 节点的 `/etc/pki/ca-trust/source/anchors/` 目录，然后执行 `update-ca-trust` 即可。
+
+==== 配置证书
+
+当前软件包内已包含了一份默认开箱即用配置，将 `/etc/zot/config.sample.json` 复制到 `/etc/zot/config.json`，然后重启 `Zot` 即可 （`systemctl restart zot`）。
+
+==== 配置 DNS
+
+你需要在你的 DNS 服务器内指定 `boot.powerk8s.cn` 到镜像节点的 *A* 或者 *AAAA* 记录。如果无法管理DNS服务器，你可以将其添加到每个节点的 `/etc/hosts` 文件内。
+
+==== 推送镜像
+
+镜像以 `xxx-oci.tar.gz`  的格式提供，使用 `oci-import` 命令导入。使用以下命令快速导入镜像
+
+[source,bash]
+----
+oci-import -i xxx-oci.tar.gz -o boot.powerk8s.cn
+----
+
+==== 推送 Helm Charts
+
+正在补充...
+
+=== 配置 Containerd
+
+由于导入了CA证书，需要重启 `containerd` ，使用 `systemctl restart containerd` 即可。
+
+=== 配置高可用 （可选）
+
+如果你需要高可用部署，你可以使用 `keepalived` + `haproxy` 负载主节点，主节点的个数建议为奇数，此处以三节点为例。
+
+==== 配置 Keepalived
+
+编写 Keepalived 主配置，具体内容如下：
+
+./etc/keepalived/keepalived.conf
+[source,nginx]
+----
+global_defs {
+    router_id LVS_DEVEL
+}
+vrrp_script check_apiserver {
+  script "/etc/keepalived/check_apiserver.sh"
+  interval 3
+  weight -2
+  fall 10
+  rise 2
+}
+
+vrrp_instance VI_1 {
+    state MASTER
+    # 配置与其他 k8s 公用的网卡
+    interface eth0
+    virtual_router_id 52
+    priority 100
+    authentication {
+        auth_type PASS
+        auth_pass 42
+    }
+    virtual_ipaddress {
+        # 填写 VIP 地址
+        172.18.40.121
+    }
+    track_script {
+        check_apiserver
+    }
+}
+----
+
+编辑测试脚本，具体内容如下：
+
+./etc/keepalived/check_apiserver.sh
+[source,bash]
+----
+#!/bin/sh
+errorExit() {
+    echo "*** $*" 1>&2
+    exit 1
+}
+
+APISERVER_DEST_PORT=8443
+# 填写 VIP 地址
+APISERVER_VIP=172.18.40.121
+curl --silent --max-time 2 --insecure https://localhost:$APISERVER_DEST_PORT/ -o /dev/null || errorExit "Error GET https://localhost:$APISERVER_DEST_PORT/"
+if ip addr | grep -q ${APISERVER_VIP}; then
+    curl --silent --max-time 2 --insecure https://$APISERVER_VIP:$APISERVER_DEST_PORT/ -o /dev/null || errorExit "Error GET https://$APISERVER_VIP:$APISERVER_DEST_PORT/"
+fi
+----
+
+最后启动 Keepalived
+
+[source,bash]
+----
+chmod +x /etc/keepalived/check_apiserver.sh
+systemctl enable --now keepalived
+systemctl restart keepalived
+----
+
+==== 配置 HAProxy
+
+编辑 HAProxy 配置，将其修改为如下配置：
+
+./etc/haproxy/haproxy.cfg
+[source,bash]
+----
+global
+    log /dev/log local0
+    log /dev/log local1 notice
+    daemon
+
+defaults
+    mode                    http
+    log                     global
+    option                  httplog
+    option                  dontlognull
+    option http-server-close
+    option forwardfor       except 127.0.0.0/8
+    option                  redispatch
+    retries                 1
+    timeout http-request    10s
+    timeout queue           20s
+    timeout connect         5s
+    timeout client          20s
+    timeout server          20s
+    timeout http-keep-alive 10s
+    timeout check           10s
+
+frontend apiserver
+    bind *:8443
+    mode tcp
+    option tcplog
+    default_backend apiserver
+
+backend apiserver
+    option httpchk GET /healthz
+    http-check expect status 200
+    mode tcp
+    option ssl-hello-chk
+    balance     roundrobin
+        #修改为第一个 k8s 控制节点地址
+        server k8s-01 172.18.40.124:6443 check
+        #修改为第二个 k8s 控制节点地址
+        server k8s-02 172.18.40.125:6443 check
+        #修改为第三个 k8s 控制节点地址
+        server k8s-03 172.18.40.126:6443 check
+
+----
+
+最后启动 HAProxy
+
+[source,bash]
+----
+systemctl enable --now haproxy
+systemctl restart haproxy
+----
+
+== 引导集群
+
+一切准备就绪后，即可开始安装集群
+
+=== 安装控制节点
+
+你可以使用以下命令来安装 **kubernetes 控制节点**
+
+TIP: 如果你已经安装过 *kubernetes* 想重置的话可使用 `yes | kubeadm reset`
+
+[source,bash]
+----
+# 其中 "172.18.40.121:8443" 为暴露面板的地址和端口，一般为高可用地址IP和端口
+kubeadm init \
+	--control-plane-endpoint "172.18.40.121:8443" \ <1>
+	--upload-certs \ <2>
+	--pod-network-cidr=10.244.0.0/16 <3>
+----
+
+.其中：
+<1> `--control-plane-endpoint`: 指定暴露面板的地址和端口，一般为高可用地址IP和端口
+<2> `--upload-certs`: 自动更新证书
+<3> `--pod-network-cidr`: Pod 内部通信的网段，取决于 CNI 插件定义的网段
+
+=== 加入其他控制节点
+
+当第一个控制节点安装完成，输出类似于：
+
+[source,text]
+----
+
+You can now join any number of control-plane node by running the following command on each as a root:
+kubeadm join <END_POINT_IP:PORT> --token <TOKEN> --discovery-token-ca-cert-hash sha256:<CA_HASH> --control-plane --certificate-key <CA_KEY>
+
+Please note that the certificate-key gives access to cluster sensitive data, keep it secret!
+As a safeguard, uploaded-certs will be deleted in two hours; If necessary, you can use kubeadm init phase upload-certs to reload certs afterward.
+
+Then you can join any number of worker nodes by running the following on each as root:
+  kubeadm join <END_POINT_IP:PORT> --token <TOKEN> --discovery-token-ca-cert-hash sha256:<CA_HASH>
+----
+
+使用第一段指令：
+
+[source,bash]
+----
+kubeadm join <END_POINT_IP:PORT> --token <TOKEN> --discovery-token-ca-cert-hash sha256:<CA_HASH> --control-plane --certificate-key <CA_KEY>
+----
+
+将当前节点加入集群中，在本教程中， `<END_POINT_IP:PORT>` 指代高可用IP+端口。
+
+=== 加入工作节点
+
+加入工作节点与控制节点相同，使用如下命令将当前节点作为工作节点加入到集群下。：
+
+[source,bash]
+----
+  kubeadm join <END_POINT_IP:PORT> --token <TOKEN> --discovery-token-ca-cert-hash sha256:<CA_HASH>
+----
+
+=== 验证集群
+
+==== 检查证书过期时间
+
+在控制节点使用以下命令查看集群证书过期时间，如无错误，应该是 99 年后过期
+
+[source,bash]
+----
+kubeadm certs check-expiration
+----
+
+==== 检查系统 Pod 启动情况
+
+在控制节点使用以下命令查看 `kube-system` 命名空间下 Pod 的状态，正常情况下，应为 `coredns` 处于 *Padding* 状态，其他 Pod 则为 `Running` 状态。
+
+[source,bash]
+----
+ kubectl get pods -n kube-system
+----
