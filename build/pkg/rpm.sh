@@ -259,6 +259,7 @@ function func_setup() {
       targets+=("pkg/rpm/$_pkg_name/build")
       IFS=';' read -r -a _pkg_build_requires <<<"$(echo "$_pkg_info" | grep "BuildRequires=" | sed 's/BuildRequires=//g')"
       IFS=';' read -r -a _pkg_requires <<<"$(echo "$_pkg_info" | grep "Requires=" | sed 's/Requires=//g')"
+      IFS=';' read -r -a _pkg_provides <<<"$(echo "$_pkg_info" | grep "Provides=" | sed 's/Provides=//g')"
       #编译链接
       local_build_link=()
 
@@ -288,17 +289,23 @@ function func_setup() {
         rpm_build_targets+=("pkg/rpm/$item/install")
       done
       rpm_install_targets=()
+      rpm_install_depends=()
       for item in "${local_install_link[@]}"; do
         if [ ! "$item" = "$_pkg_name" ]; then
           rpm_install_targets+=("pkg/rpm/$item/install")
+          rpm_install_depends+=("$item")
         fi
       done
+      rpm_install_depends+=("$_pkg_name")
       {
-        echo -e "pkg/rpm/$_pkg_name/install: pkg/rpm/$_pkg_name/build $(
-          IFS=$' '
-          echo "${rpm_install_targets[*]}"
-        )"
-        echo -e "\t\$(RPM_TOOL_LOCAL_INSTALL_PARAMS) --local-package $_pkg_name \n"
+        for item in "${_pkg_provides[@]}"; do
+          item_name="$(echo "$item" | awk '{print $1}')"
+          echo -e "pkg/rpm/$item_name/install: pkg/rpm/$_pkg_name/build $(
+            IFS=$' '
+            echo "${rpm_install_targets[*]}"
+          )"
+          echo -e "\t\$(RPM_TOOL_LOCAL_INSTALL_PARAMS) --local-package $item_name\n"
+        done
         echo -e "pkg/rpm/$_pkg_name/build : $(
           IFS=$' '
           echo "${rpm_build_targets[*]}"
