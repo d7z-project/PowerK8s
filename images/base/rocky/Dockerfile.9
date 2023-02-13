@@ -1,0 +1,9 @@
+FROM docker.io/library/rockylinux:9 as builder
+RUN sed -e 's|^mirrorlist=|#mirrorlist=|g' \
+        -e 's|^#baseurl=http://dl.rockylinux.org/$contentdir|baseurl=https://mirrors.ustc.edu.cn/rocky|g' \
+        -i.bak \
+        /etc/yum.repos.d/rocky-extras.repo \
+        /etc/yum.repos.d/rocky.repo
+RUN yum update -y && yum clean all
+FROM scratch
+COPY --from=builder / /

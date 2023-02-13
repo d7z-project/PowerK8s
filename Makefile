@@ -13,5 +13,8 @@ CMD_DOCKER?=podman
 include packages/Packages.mk
 include images/Images.mk
 
+
 .PHONY : all
-all: pkg/all
+all: pkg/all img/all
+
+setup: img/setup

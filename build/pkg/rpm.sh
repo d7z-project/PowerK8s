@@ -462,6 +462,7 @@ function package_info() {
 
 # 生成仓库
 function func_create_repos() {
+  debug "开始生成仓库索引"
   test "$src_path" || panic "Parameter error, please set the package path."
   check_commands createrepo
   system_dist=$(platform_dist | grep "PlatformDist=" | sed 's/PlatformDist=//g')
