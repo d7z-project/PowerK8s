@@ -3,7 +3,6 @@
 :icons: font
 :source-highlighter: rouge
 
-
 此项目用于探究 kubernetes 离线化安装和使用 。
 
 TIP: 此环境推荐内部离线环境下使用 ，或者将相关域名进行网络屏蔽！
@@ -25,6 +24,17 @@ TIP: 此环境推荐内部离线环境下使用 ，或者将相关域名进行�
 * [x] CentOS 7
 * [x] Rocky Linux 9
 * [ ] Debian 11 (bullseye)
+
+== 编译项目
+
+本项目使用 `Gnu Make` 作为项目管理工具，要在本地编译项目，你需要在本地安装 `make` 和 `podman` ，在 *ArchLinux* 你可以使用 `pamcan -S make podman` 命令快速安装 。安装完成后，使用如下命令编译整个项目：
+
+[source,bash]
+----
+make all
+----
+
+编译完成后，相关产物位于 `binary` 目录下。
 
 == License
 
