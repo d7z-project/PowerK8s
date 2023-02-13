@@ -4,6 +4,6 @@ RUN sed -e 's|^mirrorlist=|#mirrorlist=|g' \
         -i.bak \
         /etc/yum.repos.d/rocky-extras.repo \
         /etc/yum.repos.d/rocky.repo
-RUN yum update -y && yum clean all
+RUN yum update -y  && yum clean all
 FROM scratch
 COPY --from=builder / /

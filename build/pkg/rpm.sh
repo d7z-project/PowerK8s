@@ -309,7 +309,7 @@ function func_setup() {
           echo -e "pkg/rpm/$item_name/install: pkg/rpm/$_pkg_name/build $(
             IFS=$' '
             echo "${rpm_install_targets[*]}"
-          )"
+          )  pkg/rpm/create_repo"
           echo -e "\t\$(RPM_TOOL_LOCAL_INSTALL_PARAMS) --local-package $item_name\n"
         done
         echo -e "pkg/rpm/$_pkg_name/build : $(
@@ -327,25 +327,35 @@ function func_setup() {
 }
 function func_local_install() {
   check_commands rpm yum
+  local_repo_config_path="/etc/yum.repos.d/local-dev.repo"
   if [ ! "$local_repository" ] || [ ! -d "$local_repository" ]; then
     panic "未找到本地依赖仓库"
   fi
+  test ! -f "$local_repo_config_path" || rm $local_repo_config_path
   # 指定的预先安装的包
-  system_dist="$(platform_dist | sed "s/PlatformDist=//g")"
+  debug "将本地仓库加入 yum 远程仓库中..."
+  cat <<EOF | tee "$local_repo_config_path" > /dev/null
+[local-dev]
+name=Local Repo
+baseurl=file://$local_repository/el\$releasever/
+enabled=1
+gpgcheck=0
+priority=1
+EOF
+  yum makecache --disablerepo=* --enablerepo=local-dev
   IFS=';' read -r -a local_build_requires <<<"$local_packages"
   for _name in "${local_build_requires[@]}"; do
     rpm -q --whatprovides "$_name" >/dev/null 2>&1 || {
-      find_path=$(find "$local_repository" -type f -name "$_name*$system_dist*.rpm" | head -n 1 || :)
-      if [ "$find_path" ]; then
-        debug "找到本地依赖 $(basename "$find_path"), 即将安装.."
-        (yum install -y "$find_path" && rpm -q --whatprovides "$_name") || panic "软件包 $_name 安装失败！"
-        debug "软件包 $_name 安装完成！"
-      else
-        panic "未找到本地依赖 $_name !"
-      fi
+      while [ "$(pgrep yum | head -n 1)" ]; do
+        debug "编译 $pkg_name 任务：发现有其他进程使用 YUM 操作软件包，等待其结束中"
+        sleep 5
+      done
+      (yum install -y "$_name" && rpm -q --whatprovides "$_name") || panic "软件包 $_name 安装失败！"
+      debug "软件包 $_name 安装完成！"
     }
   done
-
+  yum clean metadata --enablerepo=local-dev
+  test ! -f "$local_repo_config_path" || rm $local_repo_config_path
 }
 # 查询依赖信息
 function package_info() {
