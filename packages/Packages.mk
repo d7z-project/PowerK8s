@@ -18,6 +18,11 @@ pkg/rpm/create_repo:
 	bash $(TOOL_RPM) create-repo --debug -i $(RPM_OUTPUT)
 endif
 
+ifdef PACKAGES
+pkg/install/rpm:
+	$(RPM_TOOL_LOCAL_INSTALL_PARAMS) --local-package $(PACKAGES)
+endif
+
 pkg/all: pkg/rpm/el7 pkg/rpm/el9
 
 pkg/rpm/el7: img/builder/rpm/el7

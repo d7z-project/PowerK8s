@@ -334,7 +334,7 @@ function func_local_install() {
   test ! -f "$local_repo_config_path" || rm $local_repo_config_path
   # 指定的预先安装的包
   debug "将本地仓库加入 yum 远程仓库中..."
-  cat <<EOF | tee "$local_repo_config_path" > /dev/null
+  cat <<EOF | tee "$local_repo_config_path" >/dev/null
 [local-dev]
 name=Local Repo
 baseurl=file://$local_repository/el\$releasever/
@@ -343,14 +343,15 @@ gpgcheck=0
 priority=1
 EOF
   yum makecache --disablerepo=* --enablerepo=local-dev
-  IFS=';' read -r -a local_build_requires <<<"$local_packages"
+  IFS=',' read -r -a local_build_requires <<<"$local_packages"
   for _name in "${local_build_requires[@]}"; do
     rpm -q --whatprovides "$_name" >/dev/null 2>&1 || {
       while [ "$(pgrep yum | head -n 1)" ]; do
         debug "编译 $pkg_name 任务：发现有其他进程使用 YUM 操作软件包，等待其结束中"
         sleep 5
       done
-      (yum install -y "$_name" && rpm -q --whatprovides "$_name") || panic "软件包 $_name 安装失败！"
+      (yum install -y "$_name" && rpm -q --whatprovides "$_name") ||
+        ( (test ! -f "$local_repo_config_path" || rm $local_repo_config_path) && panic "软件包 $_name 安装失败！")
       debug "软件包 $_name 安装完成！"
     }
   done
