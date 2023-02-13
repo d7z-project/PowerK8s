@@ -109,13 +109,18 @@ function func_build() {
   pkg_release=$(echo "$_pkg_info" | grep "Release=" | sed 's/Release=//g')
   pkg_build_arch=$(echo "$_pkg_info" | grep "BuildArch=" | sed 's/BuildArch=//g')
   system_dist=$(echo "$_pkg_info" | grep "PlatformDist=" | sed 's/PlatformDist=//g')
+  IFS=';' read -r -a pkg_provides <<<"$(echo "$_pkg_info" | grep "Provides=" | sed 's/Provides=//g')"
+  if [ "${#pkg_provides[@]}" = "0" ]; then
+    panic "软件包 $pkg_name 未提供任何产出结果！"
+  fi
   # 软件包完整名称
   pkg_print_name="$pkg_name-$pkg_version-$pkg_release.$pkg_build_arch"
   # 产物最终复制的位置
   output_dist_path="$output_path/$system_dist"
+
   if [ "$enable_cache" = "1" ]; then
     debug "编译缓存已开启，正在检查本地包 ..."
-    find_cache_file=$(find "$output_path" -type f -name "$pkg_name*$pkg_version*$pkg_release*$pkg_build_arch*.rpm" | head -n 1)
+    find_cache_file=$(find "$output_path" -type f -name "$(echo "${pkg_provides[0]}" | awk '{print $1}')*$pkg_version*$pkg_release*$pkg_build_arch*.rpm" | head -n 1)
     if [ -f "$find_cache_file" ] && [ "$find_cache_file" -nt "$src_path" ]; then
       debug "发现缓存 $find_cache_file , 跳过编译"
       exit 0
@@ -435,7 +440,9 @@ function package_info() {
       provides+=("$name-$_name")
     fi
   done < <(echo "$spec_parse" | grep -E '^%package ')
-  provides+=("$name")
+  if [ "$(echo "$spec_parse" | grep -E '^%files *$')" == "%file" ]; then
+    provides+=("$name")
+  fi
   echo "Provides=$(
     IFS=$';'
     echo "${provides[*]}"

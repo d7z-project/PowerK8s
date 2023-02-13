@@ -98,8 +98,6 @@ An agent that runs on each node in a Kubernetes cluster making sure that contain
 /usr/share/bash-completion/completions/kubectl
 
 
-%files
-
 %changelog
 * Fri Feb 10 2023 Dragon
 - 替换默认 registry.k8s.io 到 boot.powerk8s.cn
