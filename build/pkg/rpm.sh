@@ -116,24 +116,26 @@ function func_build() {
   # 软件包完整名称
   pkg_print_name="$pkg_name-$pkg_version-$pkg_release.$pkg_build_arch"
   # 产物最终复制的位置
-  output_dist_path="$output_path/$system_dist"
-
+  output_dist_path="$output_path/$system_dist/Packages"
   if [ "$enable_cache" = "1" ]; then
     debug "编译缓存已开启，正在检查本地包 ..."
-    find_cache_file=$(find "$output_path" -type f -name "$(echo "${pkg_provides[0]}" | awk '{print $1}')*$pkg_version*$pkg_release*$pkg_build_arch*.rpm" | head -n 1)
-    if [ -f "$find_cache_file" ] && [ "$find_cache_file" -nt "$src_path" ]; then
-      debug "发现缓存 $find_cache_file , 跳过编译"
-      exit 0
-    else
-      if [ -f "$find_cache_file" ]; then
-        debug "缓存命中失败：源码经上次编译后做了修改。"
-        debug "$(basename "$src_path"): $(stat --printf='%y\n' "$src_path")"
-        debug "$(basename "$find_cache_file"): $(stat --printf='%y\n' "$find_cache_file")"
-      else
-        debug "缓存命中失败：未发现缓存。"
+    for name_alias in "${pkg_provides[@]}"; do
+      find_param="$(echo "$name_alias" | awk '{print $1}')*$pkg_version*$pkg_release*$pkg_build_arch*.rpm"
+      find_cache_file=$(find "$output_dist_path" -type f -name "$find_param" | head -n 1)
+      if [ -f "$find_cache_file" ] && [ "$find_cache_file" -nt "$src_path" ]; then
+        debug "发现缓存 $find_cache_file , 跳过编译"
+        exit 0
       fi
+    done
+    if [ -f "$find_cache_file" ]; then
+      debug "缓存命中失败：源码经上次编译后做了修改。"
+      debug "$(basename "$src_path"): $(stat --printf='%y\n' "$src_path")"
+      debug "$(basename "$find_cache_file"): $(stat --printf='%y\n' "$find_cache_file")"
+    else
+      debug "缓存命中失败：未发现缓存。"
     fi
   fi
+
   debug "开始打包 $pkg_print_name"
   # 软件包资源
   IFS=';' read -r -a pkg_resources <<<"$(echo "$_pkg_info" | grep "Resources=" | sed 's/Resources=//g')"
@@ -183,7 +185,7 @@ function func_build() {
         panic "软件包 $_name 未安装，且当前环境不允许安装软件包"
       fi
       while [ "$(pgrep yum | head -n 1)" ]; do
-        debug "编译 $_pkg_name 任务：发现有其他进程使用 YUM 操作软件包，等待其结束中"
+        debug "编译 $pkg_name 任务：发现有其他进程使用 YUM 操作软件包，等待其结束中"
         sleep 5
       done
       (rpm -q --whatprovides "$_name" >/dev/null 2>&1 || yum install -y "$_name" && rpm -q --whatprovides "$_name") || panic "软件包 $_name 安装失败！"
@@ -213,7 +215,7 @@ function func_build() {
     "$src_path"
   )
   test ! -f "$current_log_path" || mv -f "$current_log_path" "$current_log_path.old"
-  debug "开始使用 rpmbuild 打包 RPM,日志位于 $current_log_path"
+  debug "开始使用 rpmbuild 打包 $pkg_name,日志位于 $current_log_path"
   echo "command: rpmbuild -bb ${BUILD_ARGS[*]}" >"$current_log_path"
   rpmbuild -bb "${BUILD_ARGS[@]}" 2>>"$current_log_path" 1>&2 ||
     panic "软件包 $pkg_print_name 打包失败，打包日志位于 $current_log_path"
@@ -440,7 +442,7 @@ function package_info() {
       provides+=("$name-$_name")
     fi
   done < <(echo "$spec_parse" | grep -E '^%package ')
-  if [ "$(echo "$spec_parse" | grep -E '^%files *$')" == "%file" ]; then
+  if [ "$(echo "$spec_parse" | grep -E '^%files *$')" = "%files" ]; then
     provides+=("$name")
   fi
   echo "Provides=$(
@@ -448,9 +450,29 @@ function package_info() {
     echo "${provides[*]}"
   )"
   #=================
-  echo "BuildArch=$(echo "$spec_parse" | grep -E '^BuildArch' | head -n 1 | awk '{print $2}' || rpm --eval %_arch)"
+  _tmpl_build_arch=$(echo "$spec_parse" | grep -E '^BuildArch' | head -n 1 | awk '{print $2}')
+  if [ "$_tmpl_build_arch" ]; then
+    echo "BuildArch=$_tmpl_build_arch"
+  else
+    echo "BuildArch=$(rpm --eval %_arch)"
+  fi
   echo "SystemArch=$(rpm --eval %_arch)"
   platform_dist
+}
+
+# 生成仓库
+function func_create_repos() {
+  test "$src_path" || panic "Parameter error, please set the package path."
+  check_commands createrepo
+  system_dist=$(platform_dist | grep "PlatformDist=" | sed 's/PlatformDist=//g')
+  pkg_path="$src_path/$system_dist"
+  test -d "$pkg_path" || panic "包路径 $pkg_path 不存在"
+  test ! -d "repodata" || rm -r "repodata"
+  (
+    cd "$pkg_path"
+    createrepo .
+  )
+  debug "本地仓库创建完成 .."
 }
 
 function platform_dist() {
@@ -505,5 +527,8 @@ setup)
   ;;
 local-install)
   func_local_install
+  ;;
+create-repo)
+  func_create_repos
   ;;
 esac
