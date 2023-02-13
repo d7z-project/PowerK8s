@@ -6,15 +6,12 @@ DOMAIN:=boot.powerk8s.cn
 SRC_DIR:=$(abspath $(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 BINARY_DIR:=$(abspath binary)
 SETUP_DIR:=$(abspath binary/setup)
+CACHE_DIR:=$(abspath binary/cache)
 TOOLS_DIR:=$(abspath build)
-
+CMD_DOCKER?=podman
 
 include packages/Packages.mk
 include images/Images.mk
 
-.PHONY : all setup
-
-setup: pkg-setup
-
-all: pkg-all
-
+.PHONY : all
+all: pkg/all

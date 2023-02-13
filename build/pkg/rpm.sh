@@ -5,6 +5,7 @@ shift
 src_path=''
 res_path=()
 tmp_path='/tmp/rpm'
+cache_path="$tmp_path/cache"
 project_path=''
 output_path=''
 enable_down='0'
@@ -35,6 +36,11 @@ while [[ $# -ge 1 ]]; do
   --tmp)
     shift
     tmp_path=$1
+    shift
+    ;;
+  --cache)
+    shift
+    cache_path=$1
     shift
     ;;
   --debug)
@@ -91,7 +97,7 @@ done
 function func_build() {
   test "$src_path" || panic "Parameter error, please set the spec file path."
   test "$output_path" || panic "Parameter error, please set the output directory."
-  mkdir -p "$tmp_path" "$output_path"
+  mkdir -p "$tmp_path" "$output_path" "$cache_path"
   check_commands rpmspec rpmbuild rpm
   test_feature enable_install || check_commands yum
   check_files "$src_path"
@@ -130,7 +136,7 @@ function func_build() {
   IFS=';' read -r -a pkg_build_requires <<<"$(echo "$_pkg_info" | grep "BuildRequires=" | sed 's/BuildRequires=//g')"
   # 指定的预先安装的包
   IFS=';' read -r -a local_build_requires <<<"$local_packages"
-  pkg_res_path="$tmp_path/resources/$pkg_name-$pkg_version"
+  pkg_res_path="$cache_path/resources/$pkg_name-$pkg_version"
   debug "将把资源放置在 $pkg_res_path 目录下。"
   mkdir -p "$pkg_res_path"
   ############### 处理资源
@@ -262,7 +268,7 @@ function func_setup() {
     if [ -d "$pkg_path" ] && [ -f "$_src_path" ]; then
       _pkg_info=$(package_info "$_src_path")
       _pkg_name=$(echo "$_pkg_info" | grep "Name=" | sed "s/Name=//g")
-      targets+=("pkg-rpm_$_pkg_name")
+      targets+=("pkg/rpm/$_pkg_name")
       IFS=';' read -r -a _pkg_build_requires <<<"$(echo "$_pkg_info" | grep "BuildRequires=" | sed 's/BuildRequires=//g')"
       local_link=()
       for _pkg_build_require in "${_pkg_build_requires[@]}"; do
@@ -277,14 +283,14 @@ function func_setup() {
       #      --project $(SRC_DIR)/kubernetes --local-package
       rpm_targets=()
       for item in "${local_link[@]}"; do
-        rpm_targets+=("pkg-rpm_$item")
+        rpm_targets+=("pkg/rpm/$item")
       done
       {
-        echo -e "pkg-rpm_$_pkg_name : $(
+        echo -e "pkg/rpm/$_pkg_name : $(
           IFS=$' '
           echo "${rpm_targets[*]}"
         )"
-        echo -ne "\t\$(RPM_TOOL_DEFAULT_PARAMS) --project \$(PKG_SRC_DIR)/$_pkg_name "
+        echo -ne "\t\$(RPM_TOOL_DEFAULT_PARAMS) --project \$(PKG_SRC_DIR)/$_pkg_name --cache \$(CACHE_DIR) "
         if [ ! "${#local_link[@]}" = "0" ]; then
           echo -ne "\\"
           echo -e "\n\t --local-package $(
@@ -296,7 +302,7 @@ function func_setup() {
       } >>"$output_path"
     fi
   done
-  echo "pkg-rpm_all: $(
+  echo "pkg/rpm: $(
     IFS=$' '
     echo "${targets[*]}"
   )" >>"$output_path"
@@ -402,7 +408,7 @@ function package_info() {
     echo "${provides[*]}"
   )"
   #=================
-  echo "BuildArch=$(echo "$spec_parse" | grep -E '^BuildArch' | head -n 1 | awk '{print $2}' | test || rpm --eval %_arch)"
+  echo "BuildArch=$(echo "$spec_parse" | grep -E '^BuildArch' | head -n 1 | awk '{print $2}' || rpm --eval %_arch)"
   echo "SystemArch=$(rpm --eval %_arch)"
   platform_dist=$(rpmbuild --eval="%{dist}" | sed -e "s/\.//g")
   if [ ! "$platform_dist" ] || [ "$platform_dist" == "%{dist}" ]; then

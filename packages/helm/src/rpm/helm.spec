@@ -5,7 +5,7 @@ Summary:        a tool for managing Charts. Charts are packages of pre-configure
 
 License:        Apache-2.0
 URL:            https://github.com/helm/helm
-Source0:        https://github.com/helm/helm/archive/refs/tags/v3.11.0.tar.gz
+Source0:        https://github.com/helm/helm/archive/refs/tags/v%{version}.tar.gz
 
 BuildRequires:  golang
 Requires:       kubernetes-kubectl
@@ -26,7 +26,7 @@ make %{?_smp_mflags} VERSION=%{version}
 %{__mkdir_p} %{buildroot}%{_bindir} %{buildroot}/%{_defaultlicensedir}/%{name}-%{version} %{buildroot}/usr/share/bash-completion/completions
 %{__install} -m 0755 bin/helm  %{buildroot}/%{_bindir}/helm
 %{__install} -m 0644 LICENSE %{buildroot}/%{_defaultlicensedir}/%{name}-%{version}/COPYING
-%{_bindir}/helmhelm completion bash | tee %{buildroot}/usr/share/bash-completion/completions/helm > /dev/null
+%{buildroot}/%{_bindir}/helm completion bash | tee %{buildroot}/usr/share/bash-completion/completions/helm > /dev/null
 %{__ln_s} %{_bindir}/helm %{buildroot}%{_bindir}/kubectl-helm
 
 %files
