@@ -134,8 +134,7 @@ function func_build() {
   IFS=';' read -r -a pkg_resources <<<"$(echo "$_pkg_info" | grep "Resources=" | sed 's/Resources=//g')"
   # 软件包编译依赖
   IFS=';' read -r -a pkg_build_requires <<<"$(echo "$_pkg_info" | grep "BuildRequires=" | sed 's/BuildRequires=//g')"
-  # 指定的预先安装的包
-  IFS=';' read -r -a local_build_requires <<<"$local_packages"
+
   pkg_res_path="$cache_path/resources/$pkg_name-$pkg_version"
   debug "将把资源放置在 $pkg_res_path 目录下。"
   mkdir -p "$pkg_res_path"
@@ -171,21 +170,6 @@ function func_build() {
     fi
   done
   ############### 安装编译依赖
-  if [ "$enable_install" = "1" ] && [ "$local_repository" ] && [ -d "$local_repository" ]; then
-    for _name in "${local_build_requires[@]}"; do
-      rpm -q --whatprovides "$_name" >/dev/null 2>&1 || {
-        find_path=$(find "$local_repository" -type f -name "$_name*$system_dist*.rpm" | head -n 1 || :)
-        if [ "$find_path" ]; then
-          debug "找到本地依赖 $(basename "$find_path"), 即将安装.."
-          (yum install -y "$find_path" && rpm -q --whatprovides "$_name") || panic "软件包 $_name 安装失败！"
-          debug "软件包 $_name 安装完成！"
-        else
-          panic "未找到本地依赖 $_name !"
-
-        fi
-      }
-    done
-  fi
   for build_depend in "${pkg_build_requires[@]}"; do
     debug "检查软件包 $build_depend"
     _name=$(echo "$build_depend" | awk '{print $1}')
@@ -193,7 +177,11 @@ function func_build() {
       if [ ! "$enable_install" = "1" ]; then
         panic "软件包 $_name 未安装，且当前环境不允许安装软件包"
       fi
-      (yum install -y "$_name" && rpm -q --whatprovides "$_name") || panic "软件包 $_name 安装失败！"
+      while [ "$(pgrep yum | head -n 1)" ]; do
+        debug "编译 $_pkg_name 任务：发现有其他进程使用 YUM 操作软件包，等待其结束中"
+        sleep 5
+      done
+      (rpm -q --whatprovides "$_name" >/dev/null 2>&1 || yum install -y "$_name" && rpm -q --whatprovides "$_name") || panic "软件包 $_name 安装失败！"
       debug "软件包 $_name 安装完成"
     }
   done
@@ -268,44 +256,83 @@ function func_setup() {
     if [ -d "$pkg_path" ] && [ -f "$_src_path" ]; then
       _pkg_info=$(package_info "$_src_path")
       _pkg_name=$(echo "$_pkg_info" | grep "Name=" | sed "s/Name=//g")
-      targets+=("pkg/rpm/$_pkg_name")
+      targets+=("pkg/rpm/$_pkg_name/build")
       IFS=';' read -r -a _pkg_build_requires <<<"$(echo "$_pkg_info" | grep "BuildRequires=" | sed 's/BuildRequires=//g')"
-      local_link=()
+      IFS=';' read -r -a _pkg_requires <<<"$(echo "$_pkg_info" | grep "Requires=" | sed 's/Requires=//g')"
+      #编译链接
+      local_build_link=()
+
       for _pkg_build_require in "${_pkg_build_requires[@]}"; do
         _pkg_build_require_name=$(echo "$_pkg_build_require" | awk '{print $1}')
         for provides_item in "${provides_group[@]}"; do
           if [[ $provides_item = "$_pkg_build_require_name="* ]]; then
-            local_link+=("$(echo "$provides_item" | sed "s/=/ /g" | awk '{print $2}')")
+            local_build_link+=("$(echo "$provides_item" | sed "s/=/ /g" | awk '{print $2}')")
+            break
+          fi
+        done
+      done
+      #安装链接
+      local_install_link=()
+      for _pkg_require in "${_pkg_requires[@]}"; do
+        _pkg_require_name=$(echo "$_pkg_require" | awk '{print $1}')
+        for provides_item in "${provides_group[@]}"; do
+          if [[ $provides_item = "$_pkg_require_name="* ]]; then
+            local_install_link+=("$(echo "$provides_item" | sed "s/=/ /g" | awk '{print $2}')")
             break
           fi
         done
       done
       #      --project $(SRC_DIR)/kubernetes --local-package
-      rpm_targets=()
-      for item in "${local_link[@]}"; do
-        rpm_targets+=("pkg/rpm/$item")
+      rpm_build_targets=()
+      for item in "${local_build_link[@]}"; do
+        rpm_build_targets+=("pkg/rpm/$item/install")
+      done
+      rpm_install_targets=()
+      for item in "${local_install_link[@]}"; do
+        if [ ! "$item" = "$_pkg_name" ]; then
+          rpm_install_targets+=("pkg/rpm/$item/install")
+        fi
       done
       {
-        echo -e "pkg/rpm/$_pkg_name : $(
+        echo -e "pkg/rpm/$_pkg_name/install: pkg/rpm/$_pkg_name/build $(
           IFS=$' '
-          echo "${rpm_targets[*]}"
+          echo "${rpm_install_targets[*]}"
         )"
-        echo -ne "\t\$(RPM_TOOL_DEFAULT_PARAMS) --project \$(PKG_SRC_DIR)/$_pkg_name --cache \$(CACHE_DIR) "
-        if [ ! "${#local_link[@]}" = "0" ]; then
-          echo -ne "\\"
-          echo -e "\n\t --local-package $(
-            IFS=$';'
-            echo "${local_link[*]}"
-          )"
-        fi
-        echo -e "\n"
+        echo -e "\t\$(RPM_TOOL_LOCAL_INSTALL_PARAMS) --local-package $_pkg_name \n"
+        echo -e "pkg/rpm/$_pkg_name/build : $(
+          IFS=$' '
+          echo "${rpm_build_targets[*]}"
+        )"
+        echo -e "\t\$(RPM_TOOL_BUILD_PARAMS) --project \$(PKG_SRC_DIR)/$_pkg_name\n"
       } >>"$output_path"
     fi
   done
-  echo "pkg/rpm: $(
+  echo "pkg/rpm/build: $(
     IFS=$' '
     echo "${targets[*]}"
   )" >>"$output_path"
+}
+function func_local_install() {
+  check_commands rpm yum
+  if [ ! "$local_repository" ] || [ ! -d "$local_repository" ]; then
+    panic "未找到本地依赖仓库"
+  fi
+  # 指定的预先安装的包
+  system_dist="$(platform_dist | sed "s/PlatformDist=//g")"
+  IFS=';' read -r -a local_build_requires <<<"$local_packages"
+  for _name in "${local_build_requires[@]}"; do
+    rpm -q --whatprovides "$_name" >/dev/null 2>&1 || {
+      find_path=$(find "$local_repository" -type f -name "$_name*$system_dist*.rpm" | head -n 1 || :)
+      if [ "$find_path" ]; then
+        debug "找到本地依赖 $(basename "$find_path"), 即将安装.."
+        (yum install -y "$find_path" && rpm -q --whatprovides "$_name") || panic "软件包 $_name 安装失败！"
+        debug "软件包 $_name 安装完成！"
+      else
+        panic "未找到本地依赖 $_name !"
+      fi
+    }
+  done
+
 }
 # 查询依赖信息
 function package_info() {
@@ -410,7 +437,11 @@ function package_info() {
   #=================
   echo "BuildArch=$(echo "$spec_parse" | grep -E '^BuildArch' | head -n 1 | awk '{print $2}' || rpm --eval %_arch)"
   echo "SystemArch=$(rpm --eval %_arch)"
-  platform_dist=$(rpmbuild --eval="%{dist}" | sed -e "s/\.//g")
+  platform_dist
+}
+
+function platform_dist() {
+  platform_dist=$(rpm --eval="%{dist}" | sed -e "s/\.//g")
   if [ ! "$platform_dist" ] || [ "$platform_dist" == "%{dist}" ]; then
     echo "PlatformDist=unknown"
   else
@@ -458,5 +489,8 @@ build)
   ;;
 setup)
   func_setup
+  ;;
+local-install)
+  func_local_install
   ;;
 esac
