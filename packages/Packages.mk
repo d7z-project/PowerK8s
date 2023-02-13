@@ -6,8 +6,7 @@ RPM_TOOL_BUILD_PARAMS:=bash $(TOOL_RPM) build --output $(RPM_OUTPUT) --auto --de
 
 RPM_TOOL_LOCAL_INSTALL_PARAMS:=bash $(TOOL_RPM) local-install --debug --local-repository $(RPM_OUTPUT)
 
-CONTAINER_PKG_ARGS:=(test -d $(CACHE_DIR)/go || mkdir -p $(CACHE_DIR)/go) && $(CMD_DOCKER) run -it --rm  -v $(CACHE_DIR)/go:/root/go \
-  -v $(SRC_DIR):/workspace --workdir /workspace --env IN_CONTAINER=true
+CONTAINER_PKG_ARGS:=(test -d $(CACHE_DIR)/go || mkdir -p $(CACHE_DIR)/go) && $(DOCKER_RUN)
 
 ifeq ($(IN_CONTAINER), true)
 -include $(SETUP_DIR)/rpm.mk

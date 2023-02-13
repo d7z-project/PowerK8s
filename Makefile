@@ -9,7 +9,8 @@ SETUP_DIR:=$(abspath binary/setup)
 CACHE_DIR:=$(abspath binary/cache)
 TOOLS_DIR:=$(abspath build)
 CMD_DOCKER?=podman
-
+DOCKER_RUN:=$(CMD_DOCKER) run -it --rm  -v $(CACHE_DIR)/go:/root/go \
+              -v $(SRC_DIR):/workspace --workdir /workspace --env IN_CONTAINER=true
 include packages/Packages.mk
 include images/Images.mk
 
