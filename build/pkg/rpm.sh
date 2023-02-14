@@ -12,6 +12,7 @@ enable_down='0'
 enable_install='0'
 enable_cache='0'
 enable_debug='0'
+install_flag='0'
 local_repository=''
 local_packages=''
 exclude_packages=()
@@ -46,6 +47,22 @@ while [[ $# -ge 1 ]]; do
   --debug)
     shift
     enable_debug='1'
+    ;;
+  --install)
+    shift
+    install_flag='install'
+    ;;
+  --remove)
+    shift
+    install_flag='remove'
+    ;;
+  --create)
+    shift
+    install_flag='create'
+    ;;
+  --clean)
+    shift
+    install_flag='clean'
     ;;
   --enable-download)
     shift
@@ -309,7 +326,7 @@ function func_setup() {
           echo -e "pkg/rpm/$item_name/install: pkg/rpm/$_pkg_name/build $(
             IFS=$' '
             echo "${rpm_install_targets[*]}"
-          )  pkg/rpm/create_repo"
+          )  pkg/repos/create"
           echo -e "\t\$(RPM_TOOL_LOCAL_INSTALL_PARAMS) --local-package $item_name\n"
         done
         echo -e "pkg/rpm/$_pkg_name/build : $(
@@ -355,7 +372,7 @@ EOF
       debug "软件包 $_name 安装完成！"
     }
   done
-  yum clean metadata --enablerepo=local-dev
+  yum makecache
   test ! -f "$local_repo_config_path" || rm $local_repo_config_path
 }
 # 查询依赖信息
@@ -472,19 +489,49 @@ function package_info() {
 }
 
 # 生成仓库
-function func_create_repos() {
-  debug "开始生成仓库索引"
-  test "$src_path" || panic "Parameter error, please set the package path."
-  check_commands createrepo
+function func_repos() {
   system_dist=$(platform_dist | grep "PlatformDist=" | sed 's/PlatformDist=//g')
   pkg_path="$src_path/$system_dist"
-  test -d "$pkg_path" || panic "包路径 $pkg_path 不存在"
-  test ! -d "repodata" || rm -r "repodata"
-  (
-    cd "$pkg_path"
-    createrepo .
-  )
-  debug "本地仓库创建完成 .."
+  repo_list_path="/etc/yum.repos.d/local-install.repo"
+  case "$install_flag" in
+  create)
+    debug "开始为 $pkg_path 目录生成仓库索引"
+    test "$src_path" || panic "Parameter error, please set the package path."
+    check_commands createrepo
+    test -d "$pkg_path" || panic "包路径 $pkg_path 不存在"
+    test ! -d "$pkg_path/repodata" || rm -r "$pkg_path/repodata"
+    (
+      cd "$pkg_path"
+      createrepo .
+    )
+    debug "本地仓库创建完成"
+    ;;
+  install)
+    debug "开始将仓库添加至系统"
+    test ! -f "$repo_list_path" || rm "$repo_list_path"
+    cat <<EOF | tee "$repo_list_path" >/dev/null
+[local-install]
+name=Local Repo
+baseurl=file://$pkg_path/
+enabled=1
+gpgcheck=0
+priority=1
+EOF
+    yum makecache --disablerepo=* --enablerepo=local-install
+    debug "仓库添加完成"
+    ;;
+  remove)
+    debug "开始将仓库从系统中移除"
+    test ! -f "$repo_list_path" || yum clean all --disablerepo=* --enablerepo=local-install ||:
+    test ! -f "$repo_list_path" || rm "$repo_list_path"
+    debug "移除完成"
+    ;;
+  clean)
+    debug "开始移除仓库索引"
+    test ! -d "$pkg_path/repodata" || rm -r "$pkg_path/repodata"
+    debug "仓库索引已移除"
+    ;;
+  esac
 }
 
 function platform_dist() {
@@ -540,7 +587,7 @@ setup)
 local-install)
   func_local_install
   ;;
-create-repo)
-  func_create_repos
+repos)
+  func_repos
   ;;
 esac

@@ -6,31 +6,59 @@ RPM_TOOL_BUILD_PARAMS:=bash $(TOOL_RPM) build --output $(RPM_OUTPUT) --auto --de
 
 RPM_TOOL_LOCAL_INSTALL_PARAMS:=bash $(TOOL_RPM) local-install --debug --local-repository $(RPM_OUTPUT)
 
-CONTAINER_PKG_ARGS:=(test -d $(CACHE_DIR)/go || mkdir -p $(CACHE_DIR)/go) && $(DOCKER_RUN)
+CONTAINER_PKG_ARGS:=(test -d $(CACHE_DIR)/go || mkdir -p $(CACHE_DIR)/go) && $(DOCKER_RUN) -v $(CACHE_DIR)/go:/root/go
 
 ifeq ($(IN_CONTAINER), true)
 -include $(SETUP_DIR)/rpm.mk
 -include $(SETUP_DIR)/deb.mk
 pkg/setup/rpm:
 	bash $(TOOL_RPM) setup --project $(PKG_SRC_DIR) -o $(SETUP_DIR)/rpm.mk --debug
-pkg/rpm/create_repo:
-	bash $(TOOL_RPM) create-repo --debug -i $(RPM_OUTPUT)
+
+pkg/repos/create:
+	bash $(TOOL_RPM) repos --debug -i $(RPM_OUTPUT) --create
+
+pkg/repos/force-install:
+	bash $(TOOL_RPM) repos --debug -i $(RPM_OUTPUT) --install
+
+pkg/repos/install: pkg/repos/create
+	bash $(TOOL_RPM) repos --debug -i $(RPM_OUTPUT) --install
+
+pkg/repos/remove:
+	bash $(TOOL_RPM) repos --debug -i $(RPM_OUTPUT) --remove
+
+pkg/repos/clean: pkg/repos/remove
+	bash $(TOOL_RPM) repos --debug -i $(RPM_OUTPUT) --clean
+
 endif
 
 ifdef PACKAGES
 pkg/install/rpm:
 	$(RPM_TOOL_LOCAL_INSTALL_PARAMS) --local-package $(PACKAGES)
+
 endif
 
+ifdef SKIP_BUILD_PACKAGES
+pkg/all:
+else
 pkg/all: pkg/rpm/el7 pkg/rpm/el9
+endif
+
+ifndef SKIP_BUILD_PACKAGES
 
 pkg/rpm/el7: img/builder/rpm/el7
 	$(CONTAINER_PKG_ARGS) --name el7-builder $(DOMAIN)/builder/rpm:el7 \
-  sh -c 'make pkg/setup/rpm && make -j1 pkg/rpm/build && make pkg/rpm/create_repo'
+  sh -c 'make pkg/setup/rpm && make -j1 pkg/rpm/build && make pkg/repos/create'
 
 pkg/rpm/el9: img/builder/rpm/el9
 	$(CONTAINER_PKG_ARGS) --name el9-builder $(DOMAIN)/builder/rpm:el9 \
-  sh -c 'make pkg/setup/rpm && make -j1 pkg/rpm/build && make pkg/rpm/create_repo'
+  sh -c 'make pkg/setup/rpm && make -j1 pkg/rpm/build && make pkg/repos/create'
+
+else
+
+pkg/rpm/el7:
+pkg/rpm/el9:
+
+endif
 
 pkg-rpm-el7-dev: img/builder/rpm/el7
 	$(CONTAINER_PKG_ARGS) --name el7-test $(DOMAIN)/builder/rpm:el7 bash
