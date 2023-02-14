@@ -1,6 +1,5 @@
 PKG_SRC_DIR:=$(abspath $(SRC_DIR)/packages)
 TOOL_RPM:=$(abspath $(TOOLS_DIR)/pkg/rpm.sh)
-RPM_OUTPUT:=$(abspath $(BINARY_DIR)/pkg/rpm)
 # 编译参数，容器内使用
 RPM_TOOL_BUILD_PARAMS:=bash $(TOOL_RPM) build --output $(RPM_OUTPUT) --auto --debug  --cache $(CACHE_DIR)
 
@@ -15,20 +14,19 @@ pkg/setup/rpm:
 	bash $(TOOL_RPM) setup --project $(PKG_SRC_DIR) -o $(SETUP_DIR)/rpm.mk --debug
 
 pkg/repos/create:
-	bash $(TOOL_RPM) repos --debug -i $(RPM_OUTPUT) --create
+	$(PKG_RPM_REPO) --create
 
 pkg/repos/force-install:
-	bash $(TOOL_RPM) repos --debug -i $(RPM_OUTPUT) --install
+	$(PKG_RPM_REPO) --install
 
 pkg/repos/install: pkg/repos/create
-	bash $(TOOL_RPM) repos --debug -i $(RPM_OUTPUT) --install
+	$(PKG_RPM_REPO) --install
 
 pkg/repos/remove:
-	bash $(TOOL_RPM) repos --debug -i $(RPM_OUTPUT) --remove
+	$(PKG_RPM_REPO) --remove
 
-pkg/repos/clean: pkg/repos/remove
-	bash $(TOOL_RPM) repos --debug -i $(RPM_OUTPUT) --clean
-
+pkg/repos/delete: pkg/repos/remove
+	$(PKG_RPM_REPO) --delete
 endif
 
 ifdef PACKAGES

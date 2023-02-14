@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+UTIL_PATH=$(cd "$(dirname "${BASH_SOURCE:-$0}")/../" && pwd)
+source "$UTIL_PATH/util.sh" || exit 1
+
 set -e
 child_command="$1"
 shift
@@ -120,7 +123,7 @@ function func_build() {
   check_files "$src_path"
   check_dirs "${res_path[@]}" "$tmp_path" "$output_path"
   test_feature local_repository || check_dirs "$local_repository"
-  _pkg_info=$(package_info "$src_path")
+  _pkg_info=$(bash "$UTIL_PATH/pkg/rpm-src-info.sh" "$src_path")
   pkg_name=$(echo "$_pkg_info" | grep "Name=" | sed 's/Name=//g')
   pkg_version=$(echo "$_pkg_info" | grep "Version=" | sed 's/Version=//g')
   pkg_release=$(echo "$_pkg_info" | grep "Release=" | sed 's/Release=//g')
@@ -263,7 +266,7 @@ function func_setup() {
   for pkg_path in "$project_path"/*; do
     _src_path="$pkg_path/src/rpm/$(basename "$pkg_path").spec"
     if [ -d "$pkg_path" ] && [ -f "$_src_path" ]; then
-      _pkg_info=$(package_info "$_src_path")
+      _pkg_info=$(bash "$UTIL_PATH/pkg/rpm-src-info.sh" "$_src_path")
       _pkg_name=$(echo "$_pkg_info" | grep "Name=" | sed "s/Name=//g")
       IFS=';' read -r -a _pkg_provides <<<"$(echo "$_pkg_info" | grep "Provides=" | sed 's/Provides=//g')"
       for item in "${_pkg_provides[@]}"; do
@@ -278,7 +281,7 @@ function func_setup() {
   for pkg_path in "$project_path"/*; do
     _src_path="$pkg_path/src/rpm/$(basename "$pkg_path").spec"
     if [ -d "$pkg_path" ] && [ -f "$_src_path" ]; then
-      _pkg_info=$(package_info "$_src_path")
+      _pkg_info=$(bash "$UTIL_PATH/pkg/rpm-src-info.sh" "$_src_path")
       _pkg_name=$(echo "$_pkg_info" | grep "Name=" | sed "s/Name=//g")
       targets+=("pkg/rpm/$_pkg_name/build")
       IFS=';' read -r -a _pkg_build_requires <<<"$(echo "$_pkg_info" | grep "BuildRequires=" | sed 's/BuildRequires=//g')"
@@ -375,197 +378,7 @@ EOF
   yum makecache
   test ! -f "$local_repo_config_path" || rm $local_repo_config_path
 }
-# 查询依赖信息
-function package_info() {
-  spec_parse=$(
-    rpmspec --define "%debug_package %{nil}" --parse "$1" | sed '/^\s*$/d'
-  )
-  name="$(echo "$spec_parse" | grep -E '^Name' | head -n 1 | awk '{print $2}')"
-  version="$(echo "$spec_parse" | grep -E '^Version' | head -n 1 | awk '{print $2}')"
-  release="$(echo "$spec_parse" | grep -E '^Release' | head -n 1 | awk '{print $2}')"
-  echo "Name=$name"
-  echo "Version=$version"
-  echo "Release=$release"
-  echo "Summary=$(echo "$spec_parse" | grep -E '^Summary' | head -n 1 | awk '{for(i=2;i<=NF;++i)print $i}' | xargs echo)"
-  res=()
-  for file in $(echo "$spec_parse" | grep -E '^Source' | awk '{print $2}'); do
-    res+=("$file")
-  done
-  for file in $(echo "$spec_parse" | grep -E '^Patch' | awk '{print $2}'); do
-    res+=("$file")
-  done
-  echo "Resources=$(
-    IFS=$';'
-    echo "${res[*]}"
-  )"
-  tmpl_requires=()
-  for items in $(echo "$spec_parse" | grep -E '^Requires' | awk '{for(i=2;i<=NF;++i)print $i}'); do
-    tmpl_requires+=("$items")
-  done
-  requires=()
-  for ((i = 0; i < "${#tmpl_requires[@]}"; i++)); do
-    tmpl_next=${tmpl_requires[$((i + 1))]}
-    if [ "$tmpl_next" ]; then
-      if [[ $tmpl_next = \>* ]] || [[ $tmpl_next = =* ]] || [[ $tmpl_next = \<* ]] || [[ $tmpl_next = \!* ]]; then
-        requires+=("${tmpl_requires[$i]} ${tmpl_requires[$((i + 1))]} ${tmpl_requires[$((i + 2))]}")
-        i=$((i + 2))
-      else
-        requires+=("${tmpl_requires[$i]}")
-      fi
-    else
-      requires+=("${tmpl_requires[$i]}")
-    fi
-  done
-  echo "Requires=$(
-    IFS=$';'
-    echo "${requires[*]}"
-  )"
 
-  tmpl_build_requires=()
-  for items in $(echo "$spec_parse" | grep -E '^BuildRequires' | awk '{for(i=2;i<=NF;++i)print $i}'); do
-    tmpl_build_requires+=("$items")
-  done
-  build_requires=()
-  for ((i = 0; i < "${#tmpl_build_requires[@]}"; i++)); do
-    tmpl_next=${tmpl_build_requires[$((i + 1))]}
-    if [ "$tmpl_next" ]; then
-      if [[ $tmpl_next = \>* ]] || [[ $tmpl_next = =* ]] || [[ $tmpl_next = \<* ]] || [[ $tmpl_next = \!* ]]; then
-        build_requires+=("${tmpl_build_requires[$i]} ${tmpl_build_requires[$((i + 1))]} ${tmpl_build_requires[$((i + 2))]}")
-        i=$((i + 2))
-      else
-        build_requires+=("${tmpl_build_requires[$i]}")
-      fi
-    else
-      build_requires+=("${tmpl_build_requires[$i]}")
-    fi
-  done
-  echo "BuildRequires=$(
-    IFS=$';'
-    echo "${build_requires[*]}"
-  )"
-  #=================
-  tmpl_provides=()
-  for items in $(echo "$spec_parse" | grep -E '^Provides' | awk '{for(i=2;i<=NF;++i)print $i}'); do
-    tmpl_provides+=("$items")
-  done
-  provides=()
-  for ((i = 0; i < "${#tmpl_provides[@]}"; i++)); do
-    tmpl_next=${tmpl_provides[$((i + 1))]}
-    if [ "$tmpl_next" ]; then
-      if [[ $tmpl_next = \>* ]] || [[ $tmpl_next = =* ]] || [[ $tmpl_next = \<* ]] || [[ $tmpl_next = \!* ]]; then
-        provides+=("${tmpl_provides[$i]} ${tmpl_provides[$((i + 1))]} ${tmpl_provides[$((i + 2))]}")
-        i=$((i + 2))
-      else
-        provides+=("${tmpl_provides[$i]}")
-      fi
-    else
-      provides+=("${tmpl_provides[$i]}")
-    fi
-  done
-  while IFS= read -r param; do
-    _name=$(echo "$param" | awk '{print $NF}')
-    if [[ " ${param[*]} " =~ " -n " ]] && [ ! "$_name" = "$name" ]; then
-      provides+=("$_name")
-    else
-      provides+=("$name-$_name")
-    fi
-  done < <(echo "$spec_parse" | grep -E '^%package ')
-  if [ "$(echo "$spec_parse" | grep -E '^%files *$')" = "%files" ]; then
-    provides+=("$name")
-  fi
-  echo "Provides=$(
-    IFS=$';'
-    echo "${provides[*]}"
-  )"
-  #=================
-  _tmpl_build_arch=$(echo "$spec_parse" | grep -E '^BuildArch' | head -n 1 | awk '{print $2}')
-  if [ "$_tmpl_build_arch" ]; then
-    echo "BuildArch=$_tmpl_build_arch"
-  else
-    echo "BuildArch=$(rpm --eval %_arch)"
-  fi
-  echo "SystemArch=$(rpm --eval %_arch)"
-  platform_dist
-}
-
-# 生成仓库
-function func_repos() {
-  system_dist=$(platform_dist | grep "PlatformDist=" | sed 's/PlatformDist=//g')
-  pkg_path="$src_path/$system_dist"
-  repo_list_path="/etc/yum.repos.d/local-install.repo"
-  case "$install_flag" in
-  create)
-    debug "开始为 $pkg_path 目录生成仓库索引"
-    test "$src_path" || panic "Parameter error, please set the package path."
-    check_commands createrepo
-    test -d "$pkg_path" || panic "包路径 $pkg_path 不存在"
-    test ! -d "$pkg_path/repodata" || rm -r "$pkg_path/repodata"
-    (
-      cd "$pkg_path"
-      createrepo .
-    )
-    debug "本地仓库创建完成"
-    ;;
-  install)
-    debug "开始将仓库添加至系统"
-    test ! -f "$repo_list_path" || rm "$repo_list_path"
-    cat <<EOF | tee "$repo_list_path" >/dev/null
-[local-install]
-name=Local Repo
-baseurl=file://$pkg_path/
-enabled=1
-gpgcheck=0
-priority=1
-EOF
-    yum makecache --disablerepo=* --enablerepo=local-install
-    debug "仓库添加完成"
-    ;;
-  remove)
-    debug "开始将仓库从系统中移除"
-    test ! -f "$repo_list_path" || yum clean all --disablerepo=* --enablerepo=local-install ||:
-    test ! -f "$repo_list_path" || rm "$repo_list_path"
-    debug "移除完成"
-    ;;
-  clean)
-    debug "开始移除仓库索引"
-    test ! -d "$pkg_path/repodata" || rm -r "$pkg_path/repodata"
-    debug "仓库索引已移除"
-    ;;
-  esac
-}
-
-function platform_dist() {
-  platform_dist=$(rpm --eval="%{dist}" | sed -e "s/\.//g")
-  if [ ! "$platform_dist" ] || [ "$platform_dist" == "%{dist}" ]; then
-    echo "PlatformDist=unknown"
-  else
-    echo "PlatformDist=$platform_dist"
-  fi
-}
-function panic() {
-  echo -ne "[\033[31mError\033[0m] $*\n" >&2
-  exit 1
-}
-function debug() {
-  if [ "$enable_debug" = "1" ]; then
-    echo -ne "[\033[33mDebug\033[0m] $*\n" >&2
-  fi
-}
-function check_commands() {
-  for cmd in "$@"; do
-    command -v "$cmd" >/dev/null 2>&1 || panic "未在当前环境中发现 '$cmd' 命令."
-  done
-}
-function check_files() {
-  for path in "$@"; do
-    test -f "$path" || panic "文件 '$path' 不存在."
-  done
-}
-function check_dirs() {
-  for path in "$@"; do
-    test -d "$path" || panic "目录 '$path' 不存在."
-  done
-}
 function test_feature() {
   name="$1"
   eval "value=\$$name"

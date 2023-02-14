@@ -10,6 +10,11 @@ SETUP_DIR:=$(abspath binary/setup)
 CACHE_DIR:=$(abspath binary/cache)
 # 工具包路径
 TOOLS_DIR:=$(abspath build)
+#RPM输出位置
+RPM_OUTPUT:=$(abspath $(BINARY_DIR)/pkg/rpm)
 # 容器运行命令
 DOCKER_RUN:=$(CMD_DOCKER) run -it --rm  \
               -v $(SRC_DIR):/workspace --workdir /workspace --env IN_CONTAINER=true
+
+TASK_DYN:= DEBUG=1 bash $(TOOLS_DIR)/task/dynamic-task.sh --root '$(SRC_DIR)'
+PKG_RPM_REPO:= DEBUG=1 bash $(TOOLS_DIR)/pkg/rpm-repos.sh --repos '$(RPM_OUTPUT)'

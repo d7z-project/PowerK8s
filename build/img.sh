@@ -5,7 +5,6 @@ shift
 enable_debug='0'
 src_path=''
 project_path_id=''
-save_path=''
 out_path=''
 registry=''
 save_provides_path=''
@@ -78,7 +77,6 @@ function func_container_run_setup() {
       dyn_depend_image="$(grep -E "^## *Image=" <"$dyn_spec" | head -n 1 | sed 's/## *Image=//g')"
       dyn_name="$(basename "$dyn_spec" | sed -e 's/\..*$//g' -e 's|:|/|g')"
       dyn_depend_target="$( (grep -E "^## *DependsTarget=" <"$dyn_spec" | head -n 1 | sed 's/## *DependsTarget=//g') || echo "")"
-      file_name="$(basename "$dyn_spec")"
       {
         echo -n "dyn/img/$dyn_name: $dyn_depend_target"
         for local_img in "${local_images[@]}"; do
@@ -86,16 +84,9 @@ function func_container_run_setup() {
             echo -n " $(echo "$local_img" | sed 's/=/ /g' | awk '{print $2}')"
           fi
         done
-        echo -ne "\n\t"
-        cat <<EOF
-(test -d '\$(DYN_IMG_INFO_OUTPUT)' || mkdir -p '\$(DYN_IMG_INFO_OUTPUT)' ) && \
-( test "\$(DYN_IMG_INFO_OUTPUT)/$dyn_name.list" -nt "\$(IMG_DYNAMIC_SRC_DIR)/$file_name" ) ||  \
-((test ! -f "\$(DYN_IMG_INFO_OUTPUT)/$dyn_name.list" || rm "\$(DYN_IMG_INFO_OUTPUT)/$dyn_name.list" )  && \
-\$(DOCKER_RUN) --name 'img-dyn-$dyn_name' -v '\$(DYN_IMG_INFO_OUTPUT):/build/img/output' \
--e 'OCI_IMAGE_OUTPUT=/build/img/output/$dyn_name.list' $dyn_depend_image sh '/workspace/images/dynamic/$file_name' && \
-test ! -f "\$(DYN_IMG_INFO_OUTPUT)/$dyn_name.list" && touch -r "\$(DYN_IMG_INFO_OUTPUT)/$dyn_name.list")
-EOF
-      } >> "$out_path"
+        echo -e "\n\t\$(TASK_DYN) -o '\$(DYN_IMG_INFO_OUTPUT)' -n $dyn_name"
+
+      } >>"$out_path"
     fi
 
   done < <(find "$src_path" -type f -name '*.sh' -print0)
