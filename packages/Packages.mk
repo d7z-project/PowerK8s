@@ -26,11 +26,11 @@ pkg/all: pkg/rpm/el7 pkg/rpm/el9
 
 pkg/rpm/el7: img/builder/rpm/el7
 	$(CONTAINER_PKG_ARGS) --name el7-builder $(DOMAIN)/builder/rpm:el7 \
-  sh -c 'make pkg/setup/rpm && make -j$(nproc) pkg/rpm/build && make pkg/rpm/create_repo'
+  sh -c 'make pkg/setup/rpm && make -j1 pkg/rpm/build && make pkg/rpm/create_repo'
 
 pkg/rpm/el9: img/builder/rpm/el9
 	$(CONTAINER_PKG_ARGS) --name el9-builder $(DOMAIN)/builder/rpm:el9 \
-  sh -c 'make pkg/setup/rpm && make -j$(nproc) pkg/rpm/build && make pkg/rpm/create_repo'
+  sh -c 'make pkg/setup/rpm && make -j1 pkg/rpm/build && make pkg/rpm/create_repo'
 
 pkg-rpm-el7-dev: img/builder/rpm/el7
 	$(CONTAINER_PKG_ARGS) --name el7-test $(DOMAIN)/builder/rpm:el7 bash
