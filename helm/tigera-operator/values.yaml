@@ -1,0 +1,47 @@
+network:
+  podCIDR: 10.244.0.0/16
+  backEndType: "vxlan"
+registry: boot.powerk8s.cn
+
+imagePullSecrets: {}
+
+installation:
+  enabled: true
+  kubernetesProvider: ""
+
+apiServer:
+  enabled: true
+
+certs:
+  node:
+    key:
+    cert:
+    commonName:
+  typha:
+    key:
+    cert:
+    commonName:
+    caBundle:
+
+resources: {}
+
+tolerations:
+- effect: NoExecute
+  operator: Exists
+- effect: NoSchedule
+  operator: Exists
+
+nodeSelector:
+  kubernetes.io/os: linux
+
+podAnnotations: {}
+
+podLabels: {}
+
+tigeraOperator:
+  image: tigera/operator
+  version: v1.29.0
+  registry: boot.powerk8s.cn
+calicoctl:
+  image: boot.powerk8s.cn/calico/ctl
+  tag: v3.25.0
