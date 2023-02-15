@@ -11,4 +11,4 @@ include images/Images.mk
 .PHONY : setup all
 all: pkg/all img/all
 
-setup: img/setup/static
+setup: img/setup
