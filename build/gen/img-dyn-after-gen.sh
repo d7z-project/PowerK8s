@@ -44,6 +44,9 @@ task_pack_dyn=()
       task_current_dyn=()
       task_current_save_dyn=()
       while IFS= read -r image; do
+        if [ "$image" = "" ]; then
+          continue
+        fi
         img_task_id="img/$dyn_name/$(echo "$image" | sed -e 's|/| |' -e 's|:|/|g' | awk '{print $2}')"
         task_current_dyn+=("$img_task_id")
         echo "$img_task_id :"

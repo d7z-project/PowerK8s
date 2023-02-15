@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+UTIL_TYPE=img/pull
 UTIL_PATH=$(cd "$(dirname "${BASH_SOURCE:-$0}")/../" && pwd)
 source "$UTIL_PATH/util.sh" || exit 1
 set -e
@@ -21,11 +22,12 @@ while [[ $# -ge 1 ]]; do
     ;;
   esac
 done
+UTIL_TYPE="$UTIL_TYPE#$img_id"
 exists_result="$(podman images --filter "reference=$img_id" --format "$img_id" --noheading 2>/dev/null)"
 if [[ "$exists_result" =~ $img_id ]]; then
-  debug "podman 已存在镜像，跳过拉取"
+  debug " 已存在镜像，跳过拉取"
 else
-  debug "使用 Podman 拉取镜像 $img_id"
+  debug "开始拉取镜像"
   podman pull "$img_id"
 fi
 new_id="$redirect_registry/$(echo "$img_id" | sed -e 's|/| |' | awk '{print $2}')"

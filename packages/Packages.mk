@@ -11,7 +11,7 @@ ifeq ($(IN_CONTAINER), true)
 -include $(SETUP_DIR)/rpm.mk
 -include $(SETUP_DIR)/deb.mk
 pkg/setup/rpm:
-	bash $(TOOL_RPM) setup --project $(PKG_SRC_DIR) -o $(SETUP_DIR)/rpm.mk --debug
+	DEBUG=1 bash $(TOOL_RPM) setup --project $(PKG_SRC_DIR) -o $(SETUP_DIR)/rpm.mk --debug
 
 pkg/repos/create:
 	$(PKG_RPM_REPO) --create

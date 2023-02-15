@@ -33,7 +33,7 @@ check_commands podman tar
 check_files "$image_list_file"
 check_dirs "$image_root_dir"
 fix_files_path "$out_file" || panic "未指定输出路径"
-UTIL_TYPE="$UTIL_TYPE/$(basename "$image_list_file")"
+UTIL_TYPE="$UTIL_TYPE#$(basename "$image_list_file")"
 debug "检查缓存"
 os_arch="$(podman info | grep ' arch: ' | awk '{print $2}' || panic "未知系统架构！")"
 if [ -f "$out_file" ] && [ "$out_file" -nt "$image_list_file" ]; then
@@ -46,9 +46,16 @@ fi
 
 tar_files=()
 while IFS= read -r image; do
+  if [ "$image" = "" ]; then
+    continue
+  fi
   image_path="$os_arch/$(echo "$image" | sed -e 's|/| |' -e "s|:|/|g" | awk '{print $2}')"
   tar_files+=("$image_path")
 done <"$image_list_file"
+if [ "${#tar_files[@]}" = "0" ]; then
+  debug "未发现镜像，跳过导出"
+  exit 0
+fi
 debug "开始导出"
 (
   cd "$image_root_dir" && tar zcvf "$out_file" "${tar_files[@]}"
