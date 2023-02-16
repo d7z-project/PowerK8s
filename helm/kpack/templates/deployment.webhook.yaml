@@ -1,0 +1,60 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kpack-webhook
+  namespace:  {{.Release.Namespace}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kpack-webhook
+  template:
+    metadata:
+      labels:
+        app: kpack-webhook
+        role: webhook
+        version: 0.9.2-rc.4
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      priorityClassName: kpack-control-plane
+      serviceAccountName: webhook
+      nodeSelector:
+        kubernetes.io/os: linux
+      containers:
+        - name: webhook
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            privileged: false
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+{{/*        image: gcr.io/cf-build-service-public/kpack/webhook@sha256:729adcf692344e99f64cfef11812835f262a026db7270be40e7822878cd1172c*/}}
+          image: {{.Values.images.registry}}/cf-build-service-public/kpack/webhook:0.9.2
+          ports:
+            - name: https-webhook
+              containerPort: 8443
+          env:
+            - name: CONFIG_LOGGING_NAME
+              value: config-logging
+            - name: CONFIG_OBSERVABILITY_NAME
+              value: config-observability
+            - name: METRICS_DOMAIN
+              value: kpack.io
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            requests:
+              cpu: 10m
+              memory: 50Mi
+            limits:
+              cpu: 100m
+              memory: 200Mi

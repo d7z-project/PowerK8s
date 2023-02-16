@@ -1,0 +1,90 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kpack-controller
+  namespace:  {{.Release.Namespace}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kpack-controller
+  template:
+    metadata:
+      labels:
+        app: kpack-controller
+        version: 0.9.2-rc.4
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      priorityClassName: kpack-control-plane
+      serviceAccountName: controller
+      nodeSelector:
+        kubernetes.io/os: linux
+      containers:
+        - name: controller
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            privileged: false
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+{{/*        image: gcr.io/cf-build-service-public/kpack/controller@sha256:c65bf3bcedd36b65a44fc36ea6b6c093c91dd98d6ba89671c20baf576988c30e*/}}
+          image: {{.Values.images.registry}}/cf-build-service-public/kpack/controller:0.9.2
+          env:
+            - name: ENABLE_PRIORITY_CLASSES
+              value: "false"
+            - name: INJECTED_SIDECAR_SUPPORT
+              value: "false"
+            - name: CONFIG_LOGGING_NAME
+              value: config-logging
+            - name: CONFIG_OBSERVABILITY_NAME
+              value: config-observability
+            - name: METRICS_DOMAIN
+              value: kpack.io
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: BUILD_INIT_IMAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: build-init-image
+                  key: image
+            - name: BUILD_INIT_WINDOWS_IMAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: build-init-windows-image
+                  key: image
+            - name: BUILD_WAITER_IMAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: build-waiter-image
+                  key: image
+            - name: REBASE_IMAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: rebase-image
+                  key: image
+            - name: COMPLETION_IMAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: completion-image
+                  key: image
+            - name: COMPLETION_WINDOWS_IMAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: completion-windows-image
+                  key: image
+          resources:
+            requests:
+              cpu: 20m
+              memory: 100Mi
+            limits:
+              cpu: 100m
+              memory: 500Mi
