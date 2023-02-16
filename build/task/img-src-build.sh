@@ -8,7 +8,8 @@ while [[ $# -ge 1 ]]; do
   case $1 in
   --id | -i)
     shift
-    img_id=$1
+    # shellcheck disable=SC2001
+    img_id="$(echo "$1" | sed 's/"//g')"
     shift
     ;;
   --root)

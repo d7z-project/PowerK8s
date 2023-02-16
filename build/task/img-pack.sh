@@ -49,7 +49,7 @@ while IFS= read -r image; do
   if [ "$image" = "" ]; then
     continue
   fi
-  image_path="$os_arch/$(echo "$image" | sed -e 's|/| |' -e "s|:|/|g" | awk '{print $2}')"
+  image_path="$os_arch/$(echo "${image//\"/}" |  sed -e 's|/| |' -e "s|:|/|g" | awk '{print $2}')"
   tar_files+=("$image_path")
 done <"$image_list_file"
 if [ "${#tar_files[@]}" = "0" ]; then
@@ -58,6 +58,6 @@ if [ "${#tar_files[@]}" = "0" ]; then
 fi
 debug "开始导出"
 (
-  cd "$image_root_dir" && tar zcvf "$out_file" "${tar_files[@]}"
+  (cd "$image_root_dir" && tar zcvf "$out_file" "${tar_files[@]}") || (rm "$out_file" && panic "导出失败！" )
 )
 debug "导出完成，数据导出到 $out_file ."

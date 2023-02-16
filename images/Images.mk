@@ -9,7 +9,7 @@ DYN_IMG_LIST:=$(CACHE_DIR)/ImgList-dyn.txt
 -include $(SETUP_DIR)/img.dyn-after.mk
 
 img/all:
-	make dyn/img/all && make img/setup/dyn-after && make dyn/img/fetch
+	make dyn/img/all && make img/setup/dyn-after && make dyn/img/fetch && make dyn/img/pack
 
 img/setup: img/setup/static img/setup/dyn
 
