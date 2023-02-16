@@ -27,4 +27,4 @@ src_path="$root_dir/images/static/$img_path/Dockerfile.$img_tag"
 # TODO: 版本比较
 test -f "$src_path" || panic "Dockerfile $src_path 不存在"
 podman build -t "$img_id" -f "$src_path" \
-  "$root_dir/images/static/$img_path"
+  "$root_dir"

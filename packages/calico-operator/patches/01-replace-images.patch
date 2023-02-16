@@ -1,0 +1,39 @@
+diff -uprN operator-1.28.5/hack/gen-versions/main.go operator-1.28.5-patch/hack/gen-versions/main.go
+--- operator-1.28.5/hack/gen-versions/main.go	2022-11-09 05:59:49.000000000 +0800
++++ operator-1.28.5-patch/hack/gen-versions/main.go	2023-02-16 11:21:47.825881756 +0800
+@@ -22,8 +22,8 @@ import (
+ )
+
+ const (
+-	defaultCalicoRegistry     = "docker.io"
+-	defaultEnterpriseRegistry = "gcr.io/unique-caldron-775/cnx"
++	defaultCalicoRegistry     = "boot.powerk8s.cn"
++	defaultEnterpriseRegistry = "boot.powerk8s.cn/unique-caldron-775/cnx"
+
+ 	eeVersionsTpl     = "enterprise.go.tpl"
+ 	osVersionsTpl     = "calico.go.tpl"
+diff -uprN operator-1.28.5/pkg/components/images.go operator-1.28.5-patch/pkg/components/images.go
+--- operator-1.28.5/pkg/components/images.go	2022-11-09 05:59:49.000000000 +0800
++++ operator-1.28.5-patch/pkg/components/images.go	2023-02-16 11:21:46.885877152 +0800
+@@ -15,15 +15,15 @@ package components
+
+ // Default registries for Calico and Tigera.
+ const (
+-	CalicoRegistry = "docker.io/"
+-	TigeraRegistry = "gcr.io/unique-caldron-775/cnx/"
++	CalicoRegistry = "boot.powerk8s.cn/"
++	TigeraRegistry = "boot.powerk8s.cn/unique-caldron-775/cnx/"
+ 	// For production InitRegistry should match TigeraRegistry.
+ 	// For the master branch and other testing scenarios we switch TigeraRegistry to
+ 	// point to a testing repo but the init image will be pushed to quay, so having
+ 	// these separate allows pulling the proper test images for the Tigera components
+ 	// and Init image when testing.
+-	ECKRegistry     = "quay.io/"
+-	InitRegistry    = "quay.io/"
+-	CSRInitRegistry = "quay.io/"
+-	K8sGcrRegistry  = "k8s.gcr.io/"
++	ECKRegistry     = "boot.powerk8s.cn/"
++	InitRegistry    = "boot.powerk8s.cn/"
++	CSRInitRegistry = "boot.powerk8s.cn/"
++	K8sGcrRegistry  = "boot.powerk8s.cn/"
+ )

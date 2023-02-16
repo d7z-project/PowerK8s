@@ -12,14 +12,6 @@ kind: Installation
 metadata:
   name: default
 spec:
-  variant: Calico
-  calicoNetwork:
-    ipPools:
-      - blockSize: 26
-        cidr: {{.Values.network.podCIDR}}
-        encapsulation: VXLANCrossSubnet
-        natOutgoing: Enabled
-        nodeSelector: all()
 {{ $installSpec | toYaml | indent 2 }}
 
 {{ end }}

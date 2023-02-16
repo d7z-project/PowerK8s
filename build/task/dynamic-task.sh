@@ -43,7 +43,7 @@ image_id="$(grep -E "^## *Image=" <"$host_src_path" | head -n 1 | sed 's/## *Ima
 debug "开始运行 $dyn_name 任务"
 podman run -it --rm --name "dyn-$dyn_name" -v "$root_path:/workspace" \
   --workdir "/workspace" -v "$result_path:/builder/result" -e IN_CONTAINER=true \
-  -e "OCI_IMAGE_OUTPUT=/builder/result/$dyn_name.list" "$image_id" sh "/workspace/images/dynamic/$dyn_name.sh"
+  -e "OCI_IMAGE_OUTPUT=/builder/result/$dyn_name.list" "$image_id" bash "/workspace/images/dynamic/$dyn_name.sh"
 debug "运行 $dyn_name 任务完成！"
 if [ -f "$host_result_path" ]; then
   debug "发现返回结果 $(basename "$host_result_path"),任务完成"

@@ -1,0 +1,16 @@
+FROM boot.powerk8s.cn/base/centos:7 as ubi
+COPY binary/pkg/rpm/el7/Packages/calico-operator-*.rpm /tmp
+RUN find /tmp -name "calico-operator-1.28.5*.el7.$(uname -m).rpm" | head -n 1 |  xargs yum install -y && yum clean all
+
+LABEL name="Tigera Operator" \
+      vendor="Tigera" \
+      summary="Tigera Operator manages the lifecycle of a Calico or Calico Enterprise installation on Kubernetes or OpenShift" \
+      description="Tigera Operator manages the lifecycle of a Calico or Calico Enterprise installation on Kubernetes or OpenShift" \
+      maintainer="maintainers@tigera.io>"
+
+ENV OPERATOR=/usr/bin/operator \
+    USER_UID=10002
+
+ENTRYPOINT ["/usr/bin/operator"]
+
+USER ${USER_UID}
