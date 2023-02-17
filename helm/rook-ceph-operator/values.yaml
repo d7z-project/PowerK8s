@@ -2,6 +2,7 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+#image:: boot.powerk8s.cn/rook/ceph:v1.10.11
 image:
   # -- Image
   repository: boot.powerk8s.cn/rook/ceph
@@ -477,12 +478,14 @@ csi:
   attacher:
     # -- Kubernetes CSI Attacher image
     # @default -- `registry.k8s.io/sig-storage/csi-attacher:v4.1.0`
-    image:
+    #image:: registry.k8s.io/sig-storage/csi-attacher:v4.1.0
+    image: boot.powerk8s.cn/sig-storage/csi-attacher:v4.1.0
 
   resizer:
     # -- Kubernetes CSI resizer image
     # @default -- `registry.k8s.io/sig-storage/csi-resizer:v1.7.0`
-    image:
+    #image:: registry.k8s.io/sig-storage/csi-resizer:v1.7.0
+    image: boot.powerk8s.cn/sig-storage/csi-resizer:v1.7.0
 
   # -- Image pull policy
   imagePullPolicy: IfNotPresent
@@ -500,7 +503,8 @@ csi:
     # -- Enable CSIAddons
     enabled: false
     # -- CSIAddons Sidecar image
-    image: "quay.io/csiaddons/k8s-sidecar:v0.5.0"
+    #image::quay.io/csiaddons/k8s-sidecar:v0.5.0
+    image: "boot.powerk8s.cn/csiaddons/k8s-sidecar:v0.5.0"
 
   nfs:
     # -- Enable the nfs csi driver
