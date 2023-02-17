@@ -1,0 +1,6 @@
+apiVersion: v2
+appVersion: 1.7.4
+description: A Helm chart for KubeVela rollout controller.
+name: vela-rollout
+type: application
+version: 1.7.4
