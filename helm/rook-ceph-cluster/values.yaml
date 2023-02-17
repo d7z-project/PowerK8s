@@ -13,7 +13,10 @@ clusterName:
 kubeVersion:
 
 # -- Cluster ceph.conf override
-configOverride:
+# 宽限时间同步
+configOverride: |
+  [global]
+  mon_clock_drift_allowed = 5
 # configOverride: |
 #   [global]
 #   mon_allow_pool_delete = true
@@ -23,13 +26,14 @@ configOverride:
 # Installs a debugging toolbox deployment
 toolbox:
   # -- Enable Ceph debugging pod deployment. See [toolbox](../Troubleshooting/ceph-toolbox.md)
-  enabled: false
+  enabled: true
   # -- Toolbox image, defaults to the image used by the Ceph cluster
-  image: #quay.io/ceph/ceph:v17.2.3
+  #image:: quay.io/ceph/ceph:v17.2.3
+  image: boot.powerk8s.cn/ceph/ceph:v17.2.3
   # -- Toolbox tolerations
-  tolerations: []
+  tolerations: [ ]
   # -- Toolbox affinity
-  affinity: {}
+  affinity: { }
   # -- Toolbox resources
   resources:
     limits:
@@ -57,9 +61,9 @@ monitoring:
   # allow adding custom labels and annotations to the prometheus rule
   prometheusRule:
     # -- Labels applied to PrometheusRule
-    labels: {}
+    labels: { }
     # -- Annotations applied to PrometheusRule
-    annotations: {}
+    annotations: { }
 
 # -- Create & use PSP resources. Set this to the same value as the rook-ceph chart.
 pspEnable: false
@@ -86,7 +90,8 @@ cephClusterSpec:
     # versions running within the cluster. See tags available at https://hub.docker.com/r/ceph/ceph/tags/.
     # If you want to be more precise, you can always use a timestamp tag such quay.io/ceph/ceph:v15.2.11-20200419
     # This tag might not contain a new Ceph version, just security fixes from the underlying operating system, which will reduce vulnerabilities
-    image: quay.io/ceph/ceph:v17.2.5
+    #image:: quay.io/ceph/ceph:v17.2.5
+    image: boot.powerk8s.cn/ceph/ceph:v17.2.5
     # Whether to allow unsupported versions of Ceph. Currently `pacific` and `quincy` are supported.
     # Future versions such as `reef` (v18) would require this to be set to `true`.
     # Do not set to true in production.
@@ -393,7 +398,7 @@ cephClusterSpec:
 ingress:
   # -- Enable an ingress for the ceph-dashboard
   dashboard:
-    {}
+    { }
     # annotations:
     #   external-dns.alpha.kubernetes.io/hostname: dashboard.example.com
     #   nginx.ingress.kubernetes.io/rewrite-target: /ceph-dashboard/$2
@@ -411,7 +416,7 @@ ingress:
     #   secretName: testsecret-tls
     ## Note: Only one of ingress class annotation or the `ingressClassName:` can be used at a time
     ## to set the ingress class
-    # ingressClassName: nginx
+  # ingressClassName: nginx
 
 # -- A list of CephBlockPool configurations to deploy
 # @default -- See [below](#ceph-block-pools)
@@ -428,13 +433,13 @@ cephBlockPools:
       isDefault: true
       reclaimPolicy: Delete
       allowVolumeExpansion: true
-      mountOptions: []
+      mountOptions: [ ]
       # see https://kubernetes.io/docs/concepts/storage/storage-classes/#allowed-topologies
-      allowedTopologies: []
-#        - matchLabelExpressions:
-#            - key: rook-ceph-role
-#              values:
-#                - storage-node
+      allowedTopologies: [ ]
+      #        - matchLabelExpressions:
+      #            - key: rook-ceph-role
+      #              values:
+      #                - storage-node
       # see https://github.com/rook/rook/blob/master/Documentation/ceph-block.md#provision-storage for available configuration
       parameters:
         # (optional) mapOptions is a comma-separated list of map options.
@@ -506,7 +511,7 @@ cephFileSystems:
       pool: data0
       reclaimPolicy: Delete
       allowVolumeExpansion: true
-      mountOptions: []
+      mountOptions: [ ]
       # see https://github.com/rook/rook/blob/master/Documentation/ceph-filesystem.md#provision-storage for available configuration
       parameters:
         # The secrets contain Ceph admin credentials.
@@ -528,10 +533,10 @@ cephFileSystemVolumeSnapshotClass:
   name: ceph-filesystem
   isDefault: true
   deletionPolicy: Delete
-  annotations: {}
-  labels: {}
+  annotations: { }
+  labels: { }
   # see https://rook.io/docs/rook/v1.10/Storage-Configuration/Ceph-CSI/ceph-csi-snapshot/#cephfs-snapshots for available configuration
-  parameters: {}
+  parameters: { }
 
 # -- Settings for the block pool snapshot class
 # @default -- See [RBD Snapshots](../Storage-Configuration/Ceph-CSI/ceph-csi-snapshot.md#rbd-snapshots)
@@ -540,10 +545,10 @@ cephBlockPoolsVolumeSnapshotClass:
   name: ceph-block
   isDefault: false
   deletionPolicy: Delete
-  annotations: {}
-  labels: {}
+  annotations: { }
+  labels: { }
   # see https://rook.io/docs/rook/v1.10/Storage-Configuration/Ceph-CSI/ceph-csi-snapshot/#rbd-snapshots for available configuration
-  parameters: {}
+  parameters: { }
 
 # -- A list of CephObjectStore configurations to deploy
 # @default -- See [below](#ceph-object-stores)

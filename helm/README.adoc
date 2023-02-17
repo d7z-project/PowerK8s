@@ -1,0 +1,38 @@
+= Helm Charts 安装
+
+== Calico
+
+[source,bash]
+----
+helm install calico ./helm/tigera-operator/ --create-namespace --namespace operator-tigera
+----
+
+== purelb
+
+[source,bash]
+----
+ helm install --create-namespace --namespace=purelb purelb helm/purelb
+----
+
+== kubevela
+
+[source,bash]
+----
+helm install --create-namespace -n vela-system kubevela helm/kubevela --wait
+----
+
+== ingress-nginx
+
+[source,bash]
+----
+helm install ingress-nginx --namespace ingress-nginx --create-namespace helm/ingress-nginx
+----
+
+== rook
+
+[source,bash]
+----
+helm install --create-namespace --namespace rook-ceph rook-ceph helm/rook-ceph-operator
+helm install --create-namespace --namespace rook-ceph rook-ceph-cluster \
+   --set operatorNamespace=rook-ceph helm/rook-ceph-cluster
+----
