@@ -100,6 +100,12 @@ EOF
     test -d "$DIST_PATH" || (echo "directory '$DIST_PATH' not exists! " && exit 1)
     install -m 0600 "$SERVER_PATH/server.key" "$DIST_PATH/server.key"
     install -m 0600 "$SERVER_PATH/server.cert" "$DIST_PATH/server.cert"
+    own="$(stat -c '%U:%G' "$DIST_PATH")"
+    echo "chown from root:root to $own"
+    chown "$own" "$DIST_PATH/server.key"
+    chown "$own" "$DIST_PATH/server.cert"
+    chmod 600 "$DIST_PATH/server.cert"
+    chmod 600 "$DIST_PATH/server.key"
     ;;
 
   info)

@@ -1,0 +1,4 @@
+FROM docker.io/oamdev/vela-cli:v1.7.4
+COPY images/static/oamdev/addons/fluxcd /usr/src/fluxcd
+COPY images/static/oamdev/addons/rollout /usr/src/rollout
+ENTRYPOINT sh -c "cd /usr/src/fluxcd && vela addon enable . && cd /usr/src/rollout && vela addon enable . "

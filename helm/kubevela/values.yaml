@@ -58,8 +58,9 @@ imageRegistry: "boot.powerk8s.cn/"
 ## @param image.pullPolicy Image pull policy
 image:
   repository: oamdev/vela-core
+  addons: boot.powerk8s.cn/oamdev/addons
   tag: v1.7.4
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
 
 ## @param resources.limits.cpu KubeVela controller's cpu limit
 ## @param resources.limits.memory KubeVela controller's memory limit

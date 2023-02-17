@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: oamdev/vela-rollout
+  repository: boot.powerk8s.cn/oamdev/vela-rollout
   tag: v1.7.4
   pullPolicy: IfNotPresent
 

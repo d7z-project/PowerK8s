@@ -60,3 +60,5 @@ endif
 
 pkg-rpm-el7-dev: img/builder/rpm/el7
 	$(CONTAINER_PKG_ARGS) --name el7-test $(DOMAIN)/builder/rpm:el7 bash
+pkg-rpm-el9-dev: img/builder/rpm/el9
+	$(CONTAINER_PKG_ARGS) --name el9-test $(DOMAIN)/builder/rpm:el9 bash

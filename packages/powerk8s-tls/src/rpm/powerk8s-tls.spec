@@ -1,5 +1,5 @@
 Name:           powerk8s-tls
-Version:        1.0.1
+Version:        1.0.2
 Release:        3%{?dist}
 Summary:        PowerK8s TLS Manager
 
