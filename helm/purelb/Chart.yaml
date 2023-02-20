@@ -5,8 +5,8 @@ description: PureLB is a Kubernetes load-balancer controller that uses standard 
 
 # The Makefile overrides both of these with the same value because it
 # will be too confusing to track them separately
-appVersion: 0.0.0
-version: 0.0.0
+appVersion: 0.6.4
+version: 0.6.4
 
 sources:
   - https://gitlab.com/purelb/purelb

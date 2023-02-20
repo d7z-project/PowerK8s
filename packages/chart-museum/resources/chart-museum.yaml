@@ -1,0 +1,9 @@
+port: 18081
+storage.backend: local
+storage.local.rootdir: /var/lib/{_user_}
+# 推送账户
+basicauth.user: admin
+# 推送密码
+basicauth.pass: admin
+# 允许不登陆拉取
+authanonymousget: true

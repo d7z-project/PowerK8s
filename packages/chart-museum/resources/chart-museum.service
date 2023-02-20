@@ -1,15 +1,14 @@
 [Unit]
-Description=Caddy
-Documentation=https://caddyserver.com/docs/
+Description=ChartMuseum
+Documentation=https://chartmuseum.com/docs
 After=network.target network-online.target
 Requires=network-online.target
 
 [Service]
-Type=notify
+Type=simple
 User={_user_}
 Group={_group_}
-ExecStart={_path_} run --environ --config /etc/caddy/Caddyfile
-ExecReload={_path_} reload --config /etc/caddy/Caddyfile --force
+ExecStart={_path_} --config /etc/{_name_}/{_name_}.yaml
 TimeoutStopSec=5s
 LimitNOFILE=1048576
 LimitNPROC=512

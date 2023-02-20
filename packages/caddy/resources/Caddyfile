@@ -1,3 +1,10 @@
-localhost {
-    respond "Hello, world!"
+boot.powerk8s.cn {
+#   tls /etc/caddy/server.cert /etc/caddy/server.key
+    handle /v2/* {
+        reverse_proxy 127.0.0.1:18080
+    }
+    handle /charts/* {
+        uri strip_prefix /charts
+        reverse_proxy 127.0.0.1:18081
+    }
 }
