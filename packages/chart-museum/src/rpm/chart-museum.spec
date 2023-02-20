@@ -72,6 +72,7 @@ getent passwd %{run_user} >/dev/null || \
 
 %post
 systemctl daemon-reload >/dev/null 2>&1 ||:
+systemctl enable --now %{name} ||:
 
 %preun
 case $1 in

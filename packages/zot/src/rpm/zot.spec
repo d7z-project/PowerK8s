@@ -54,6 +54,7 @@ htpasswd -bBn admin admin | tee %{buildroot}/etc/zot/htpasswd > /dev/null
 
 %post
 systemctl daemon-reload >/dev/null 2>&1 ||:
+systemctl enable --now zot ||:
 
 %preun
 case $1 in

@@ -1,11 +1,12 @@
 Name:           helm
 Version:        3.11.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        a tool for managing Charts. Charts are packages of pre-configured Kubernetes resources.
 
 License:        Apache-2.0
 URL:            https://github.com/helm/helm
 Source0:        https://github.com/helm/helm/archive/refs/tags/v%{version}.tar.gz
+Patch0:         01-set-default-kubeconfig.patch
 
 BuildRequires:  golang
 
@@ -14,10 +15,10 @@ Helm is a tool for managing Charts. Charts are packages of pre-configured Kubern
 
 %prep
 %setup -q
-
+patch -p1 < %{PATCH0}
 
 %build
-make %{?_smp_mflags} VERSION=%{version}
+make %{?_smp_mflags} VERSION=%{version} GIT_DIRTY=clean GIT_TAG=v%{version}
 
 
 %install
