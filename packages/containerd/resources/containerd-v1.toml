@@ -1,6 +1,6 @@
 # 此配置针对 Cgroup V1
 
-root = "/data/containerd"
+root = "/var/lib/containerd"
 
 [plugins."io.containerd.grpc.v1.cri"]
 systemd_cgroup = true

@@ -7,7 +7,8 @@ License:        Apache-2.0
 URL:            https://github.com/containerd/containerd/
 Source0:        https://github.com/containerd/containerd/archive/refs/tags/v%{version}.tar.gz
 Source1:        containerd.service
-%if %{?rhel} < 8
+# el9 才支持 cgroup v2
+%if %{?rhel} < 9
 Source2:        containerd-v1.toml
 %else
 Source2:        containerd-v2.toml

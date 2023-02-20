@@ -1,7 +1,7 @@
 # 此配置针对 Cgroup V2
 
 version = 2
-root = "/data/containerd"
+root = "/var/lib/containerd"
 
 [plugins."io.containerd.grpc.v1.cri".registry]
 config_path = "/etc/containerd/certs.d"
@@ -10,4 +10,3 @@ config_path = "/etc/containerd/certs.d"
   runtime_type = "io.containerd.runc.v2"
   [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
     SystemdCgroup = true
-
