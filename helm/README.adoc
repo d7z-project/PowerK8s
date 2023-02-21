@@ -1,5 +1,13 @@
 = Helm Charts 安装
 
+== Flannel
+
+[source,bash]
+----
+helm install flannel ./helm/cni-flannel/ --create-namespace --namespace flannel-system
+helm install flannel boot/cni-flannel --create-namespace --namespace flannel-system
+----
+
 == Calico
 
 [source,bash]
@@ -12,6 +20,7 @@ helm install calico ./helm/tigera-operator/ --create-namespace --namespace opera
 [source,bash]
 ----
  helm install --create-namespace --namespace=purelb purelb helm/purelb
+ helm install --create-namespace --namespace=purelb purelb boot/purelb
 ----
 
 == kubevela
