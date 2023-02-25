@@ -17,7 +17,7 @@ IMG_OUTPUT:=$(abspath $(BINARY_DIR)/img/export)
 # 容器合并位置
 IMG_PACK_OUTPUT:=$(abspath $(BINARY_DIR)/img/packages)
 # 容器运行命令
-DOCKER_RUN:=$(CMD_DOCKER) run -it --rm  \
+DOCKER_RUN:=$(CMD_DOCKER) run -it --network host --rm  \
               -v $(SRC_DIR):/workspace --workdir /workspace --env IN_CONTAINER=true
 # 镜像地址
 IMG_SRC_DIR:=$(abspath $(SRC_DIR)/images)

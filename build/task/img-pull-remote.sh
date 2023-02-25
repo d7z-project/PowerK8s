@@ -29,7 +29,7 @@ if [[ "$exists_result" =~ $img_id ]]; then
   debug " 已存在镜像，跳过拉取"
 else
   debug "开始拉取镜像"
-  podman pull "$img_id"
+  podman  pull  "$img_id"
 fi
 new_id="$redirect_registry/$(echo "$img_id" | sed -e 's|/| |' | awk '{print $2}')"
 if [ ! "$new_id" = "$img_id" ]; then
